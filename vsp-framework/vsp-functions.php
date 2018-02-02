@@ -2,6 +2,7 @@
 if( ! defined("ABSPATH") ) {
     exit;
 }
+
 global $vsp_plugins, $vsp_loaded_framework, $vsp_framework_data;
 $vsp_plugins = $vsp_loaded_framework = $vsp_framework_data = array();
 

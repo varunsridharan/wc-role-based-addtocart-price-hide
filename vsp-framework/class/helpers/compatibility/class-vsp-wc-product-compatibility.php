@@ -68,7 +68,12 @@ class VSP_WC_Product_Compatibility extends VSP_WC_DATA_Compatibility {
         if( VSP_Framework_Helper::is_wc_version_gte_3_0() ) {
             $parent = wc_get_product($product->get_parent_id());
         } else {
-            $parent = $product->is_type('variation') ? wc_get_product($product->id) : FALSE;
+            if( $product->is_type('variation') ) {
+                /** @noinspection Annotator */
+                $parent = wc_get_product($product->id);
+            } else {
+                $parent = FALSE;
+            }
         }
         return $parent;
     }
