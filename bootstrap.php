@@ -33,7 +33,7 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
                 'is_single_page'   => FALSE,
                 'is_sticky_header' => TRUE,
                 'buttons'          => array(
-                    'save'    => __("Save"),
+                    'save'    => __("Save", 'wcrbap-hide'),
                     'restore' => FALSE,
                     'reset'   => FALSE,
                 ),
@@ -93,6 +93,7 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
     }
 
     public function init_hooks() {
+        load_plugin_textdomain('wcrbap-hide', FALSE, WC_RBAP_PATH . '/languages');
     }
 
     public function addons_init() {
@@ -104,12 +105,23 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
     public function add_assets() {
     }
 
+    /**
+     * @param string $file
+     * @param string $domain
+     * @return string
+     */
+    public function load_textdomain($file = '', $domain = '') {
+        if( 'wcrbap-hide' === $domain )
+            return WC_RBAP_PATH . '/languages/' . get_locale() . '.mo';
+        return $file;
+    }
+
     public function row_links($plugin_meta, $plugin_file) {
         if( $plugin_file === WC_RBAP_FILE ) {
-            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'http://wordpress.org/plugins/wc-role-based-addtocart-price-hide', __('F.A.Q'));
-            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('View On Github'));
-            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('Report Issue'));
-            $plugin_meta[] = sprintf('&hearts; <a href="%s">%s</a>', 'http://paypal.me/varunsridharan23', __('Donate'));
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'http://wordpress.org/plugins/wc-role-based-addtocart-price-hide', __('F.A.Q', 'wcrbap-hide'));
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('View On Github', 'wcrbap-hide'));
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('Report Issue', 'wcrbap-hide'));
+            $plugin_meta[] = sprintf('&hearts; <a href="%s">%s</a>', 'http://paypal.me/varunsridharan23', __('Donate', 'wcrbap-hide'));
         }
 
         return $plugin_meta;
@@ -124,8 +136,8 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
      */
     public function action_links($action, $file, $plugin_meta, $status) {
         $menu_link = admin_url('admin.php?page=wc-role-based-addtocart-price-hide');
-        $actions[] = sprintf('<a href="%s">%s</a>', $menu_link, __('Settings'));
-        $actions[] = sprintf('<a href="%s">%s</a>', 'http://varunsridharan.in/plugin-support/', __('Contact Author'));
+        $actions[] = sprintf('<a href="%s">%s</a>', $menu_link, __('Settings', 'wcrbap-hide'));
+        $actions[] = sprintf('<a href="%s">%s</a>', 'http://varunsridharan.in/plugin-support/', __('Contact Author', 'wcrbap-hide'));
         $action = array_merge($actions, $action);
         return $action;
     }

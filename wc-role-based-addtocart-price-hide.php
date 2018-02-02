@@ -8,12 +8,12 @@
  * Author URI:        http://varunsridharan.in
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       wc-role-based-addtocart-price-hide
+ * Text Domain:       wcrbap-hide
  * Domain Path:       /languages
  */
 
-define('WC_RBAP_NAME', __('WC Role Based AddToCart / Price Hide')); # Plugin Name
-define('WC_RBAP_TXT', 'wc-role-based-addtocart-price-hide'); #plugin lang Domain
+define('WC_RBAP_NAME', __('WC Role Based AddToCart / Price Hide', 'wcrbap-hide')); # Plugin Name
+define('WC_RBAP_TXT', 'wcrbap-hide'); #plugin lang Domain
 define('WC_RBAP_SLUG', 'wc-role-based-addtocart-price-hide'); # Plugin Slug
 define('WC_RBAP_DB', 'wc_rbap_hide');
 define('WC_RBAP_PATH', plugin_dir_path(__FILE__)); # Plugin DIR
