@@ -10,9 +10,11 @@ wp-content/uploads/
 wp-content/wp-cache-config.php
 wp-content/plugins/hello.php
 vsp-framework/.gitignore
+vsp-framework/.git
 vsp-framework/.gitmodules
 vsp-framework/libs/wpsf/.gitignore
 vsp-framework/libs/wpsf/.gitmodules
+vsp-framework/libs/wpsf/.git
 /.htaccess
 /license.txt
 /readme.html
