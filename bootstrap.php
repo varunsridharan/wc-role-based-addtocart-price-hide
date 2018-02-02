@@ -84,7 +84,7 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
     }
 
     public function on_wp_init() {
-        if(vsp_is_frontend()){
+        if( vsp_is_frontend() ) {
             $this->frontend = new WC_Role_Based_AddToCart_Price_Hide_Frontend();
         }
     }
@@ -102,5 +102,31 @@ final class WC_Role_Based_AddToCart_Price_Hide extends VSP_Framework {
     }
 
     public function add_assets() {
+    }
+
+    public function row_links($plugin_meta, $plugin_file) {
+        if( $plugin_file === WC_RBAP_FILE ) {
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'http://wordpress.org/plugins/wc-role-based-addtocart-price-hide', __('F.A.Q'));
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('View On Github'));
+            $plugin_meta[] = sprintf('<a href="%s">%s</a>', 'https://github.com/varunsridharan/wc-role-based-addtocart-price-hide', __('Report Issue'));
+            $plugin_meta[] = sprintf('&hearts; <a href="%s">%s</a>', 'http://paypal.me/varunsridharan23', __('Donate'));
+        }
+
+        return $plugin_meta;
+    }
+
+    /**
+     * @param $action
+     * @param $file
+     * @param $plugin_meta
+     * @param $status
+     * @return mixed
+     */
+    public function action_links($action, $file, $plugin_meta, $status) {
+        $menu_link = admin_url('admin.php?page=wc-role-based-addtocart-price-hide');
+        $actions[] = sprintf('<a href="%s">%s</a>', $menu_link, __('Settings'));
+        $actions[] = sprintf('<a href="%s">%s</a>', 'http://varunsridharan.in/plugin-support/', __('Contact Author'));
+        $action = array_merge($actions, $action);
+        return $action;
     }
 }

@@ -19,7 +19,7 @@ define('WC_RBAP_DB', 'wc_rbap_hide');
 define('WC_RBAP_PATH', plugin_dir_path(__FILE__)); # Plugin DIR
 define('WC_RBAP_URL', plugins_url('', __FILE__) . '/');  # Plugin URL
 define('WC_RBAP_V', '1.0'); # Plugin Version
-defined('WC_RBAP_FILE') or define('WC_RBAP_FILE', __FILE__);
+defined('WC_RBAP_FILE') or define('WC_RBAP_FILE', plugin_basename(__FILE__));
 require_once( WC_RBAP_PATH . 'vsp-framework/vsp-init.php' );
 
 if( function_exists("vsp_mayby_framework_loader") ) {
