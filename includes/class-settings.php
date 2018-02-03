@@ -17,7 +17,7 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
     public function add_pages($pages = array()) {
         $page['general'] = array(
             'name'  => 'general',
-            'title' => __("General"),
+            'title' => __("General", 'wcrbap-hide'),
             'icon'  => 'fa fa-gear',
         );
 
@@ -28,7 +28,7 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
     public function add_sections($sections = array()) {
         $sections['general/general'] = array(
             'name'  => 'general',
-            'title' => __("General"),
+            'title' => __("General", 'wcrbap-hide'),
             'icon'  => 'fa fa-gear',
         );
 
@@ -51,8 +51,8 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
                 'options'    => vsp_user_roles_as_options(),
                 'type'       => 'select',
                 'multiple'   => TRUE,
-                'title'      => __("Enabled User Roles"),
-                'desc_field' => __("Select All User roles for whom you want to hide price / addtocart button"),
+                'title'      => __("Enabled User Roles", 'wcrbap-hide'),
+                'desc_field' => __("Select All User roles for whom you want to hide price / addtocart button", 'wcrbap-hide'),
                 'class'      => 'select2',
                 'attributes' => array(
                     'style' => 'width:50%;',
@@ -63,8 +63,8 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
                 'id'         => 'enabled_product_types',
                 'options'    => wc_get_product_types(),
                 'multiple'   => TRUE,
-                'desc_field' => __("Select All Produc Types you want to hide price / addtocart button"),
-                'title'      => __("Enabled Product Types"),
+                'desc_field' => __("Select All Produc Types you want to hide price / addtocart button", 'wcrbap-hide'),
+                'title'      => __("Enabled Product Types", 'wcrbap-hide'),
                 'class'      => 'select2',
                 'attributes' => array(
                     'style' => 'width:50%;',
@@ -92,19 +92,19 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
                         array(
                             'id'         => 'hide_price',
                             'type'       => 'switcher',
-                            'title'      => __("Hide Price ?"),
-                            'on_label'   => __("Yes"),
-                            'off_label'  => __("No"),
-                            'desc_field' => __("Product Price will be hidden if set to Yes"),
+                            'title'      => __("Hide Price ?", 'wcrbap-hide'),
+                            'on_label'   => __("Yes", 'wcrbap-hide'),
+                            'off_label'  => __("No", 'wcrbap-hide'),
+                            'desc_field' => __("Product Price will be hidden if set to Yes", 'wcrbap-hide'),
                         ),
 
                         array(
                             'id'         => 'hide_button',
                             'type'       => 'switcher',
-                            'title'      => __("Hide AddToCart Button ?"),
-                            'on_label'   => __("Yes"),
-                            'off_label'  => __("No"),
-                            'desc_field' => __("Product Add To Cart Button will be hidden if set to Yes"),
+                            'title'      => __("Hide AddToCart Button ?", 'wcrbap-hide'),
+                            'on_label'   => __("Yes", 'wcrbap-hide'),
+                            'off_label'  => __("No", 'wcrbap-hide'),
+                            'desc_field' => __("Product Add To Cart Button will be hidden if set to Yes", 'wcrbap-hide'),
                         ),
                     ),
                 );
@@ -113,18 +113,18 @@ class WC_Role_Based_AddToCart_Price_Settings extends VSP_Settings_Plugin {
                     $_tabs['fields'][] = array(
                         'id'         => 'hide_variation',
                         'type'       => 'switcher',
-                        'title'      => __("Hide Variation ?"),
-                        'on_label'   => __("Yes"),
-                        'off_label'  => __("No"),
-                        'desc_field' => __("Product Variations will be hidden if set to Yes"),
+                        'title'      => __("Hide Variation ?", 'wcrbap-hide'),
+                        'on_label'   => __("Yes", 'wcrbap-hide'),
+                        'off_label'  => __("No", 'wcrbap-hide'),
+                        'desc_field' => __("Product Variations will be hidden if set to Yes", 'wcrbap-hide'),
                     );
                 }
 
                 $_tabs['fields'][] = array(
                     'id'         => $user_role . '_' . $type . '_custom_message',
                     'type'       => 'wysiwyg',
-                    'title'      => __("Custom Message"),
-                    'desc_field' => __("Used when product price is hidden.. use <code>[currency]</code> to get current store currency"),
+                    'title'      => __("Custom Message", 'wcrbap-hide'),
+                    'desc_field' => __("Used when product price is hidden.. use <code>[currency]</code> to get current store currency", 'wcrbap-hide'),
                     'settings'   => array(
                         'textarea_rows' => 5,
                         'tinymce'       => TRUE,

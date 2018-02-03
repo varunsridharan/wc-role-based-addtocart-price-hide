@@ -5,6 +5,8 @@ vsp-framework/libs/wpsf/.git
 vsp-framework/.gitignore
 vsp-framework/.git
 vsp-framework/.gitmodules
+vsp-framework/_gsdata_
+vsp-framework/libs/wpsf/_gsdata_
 
 wp-config.php
 wp-content/advanced-cache.php

@@ -8,18 +8,18 @@
  * Author URI:        http://varunsridharan.in
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       wc-role-based-addtocart-price-hide
+ * Text Domain:       wcrbap-hide
  * Domain Path:       /languages
  */
 
-define('WC_RBAP_NAME', __('WC Role Based AddToCart / Price Hide')); # Plugin Name
-define('WC_RBAP_TXT', 'wc-role-based-addtocart-price-hide'); #plugin lang Domain
+define('WC_RBAP_NAME', __('WC Role Based AddToCart / Price Hide', 'wcrbap-hide')); # Plugin Name
+define('WC_RBAP_TXT', 'wcrbap-hide'); #plugin lang Domain
 define('WC_RBAP_SLUG', 'wc-role-based-addtocart-price-hide'); # Plugin Slug
 define('WC_RBAP_DB', 'wc_rbap_hide');
 define('WC_RBAP_PATH', plugin_dir_path(__FILE__)); # Plugin DIR
 define('WC_RBAP_URL', plugins_url('', __FILE__) . '/');  # Plugin URL
 define('WC_RBAP_V', '1.0'); # Plugin Version
-defined('WC_RBAP_FILE') or define('WC_RBAP_FILE', __FILE__);
+defined('WC_RBAP_FILE') or define('WC_RBAP_FILE', plugin_basename(__FILE__));
 require_once( WC_RBAP_PATH . 'vsp-framework/vsp-init.php' );
 
 if( function_exists("vsp_mayby_framework_loader") ) {

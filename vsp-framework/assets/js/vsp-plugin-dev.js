@@ -1,1 +1,2 @@
-../../../../../../../../../framework/wp-content/plugins/vsp-framework/assets/js/vsp-plugin-dev.js
+//@codekit-append ../vendors/blockui/jquery.blockui.js
+//@codekit-append ../vendors/vspajax/jquery.vsp-ajax.js  
