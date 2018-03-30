@@ -8,137 +8,118 @@
  - @package    WPSF                                                                               -
  - @author     Varun Sridharan <varunsridharan23@gmail.com>                                       -
  -------------------------------------------------------------------------------------------------*/
-
+global $wpsf_errors;
+$wpsf_errors = array();
 if( ! defined('ABSPATH') ) {
     die ();
 } // Cannot access pages directly.
 
+if( ! function_exists('wpsf_init_element') ) {
+    /**
+     * @param array  $field
+     * @param string $value
+     * @param string $unique
+     *
+     * @return array
+     */
+    function wpsf_init_element($field = array(), $value = '', $unique = '') {
+        $class = 'WPSFramework_Option_' . $field ['type'];
+        wpsf_autoloader($class, TRUE);
+        if( class_exists($class) ) {
+            $element              = new $class($field, $value, $unique);
+            $instance_ID          = $element->id;
+            $field['instance_id'] = $instance_ID;
+        }
+        return $field;
+    }
+}
+
 if( ! function_exists('wpsf_add_element') ) {
     /**
      * @param array  $field
      * @param string $value
      * @param string $unique
+     * @param bool   $force
+     *
      * @return string
      */
-    function wpsf_add_element($field = array(), $value = '', $unique = '') {
-        static $total_columns = 0;
+    function wpsf_add_element($field = array(), $value = '', $unique = '', $force = FALSE) {
         $output = '';
-        $class = 'WPSFramework_Option_' . $field ['type'];
-        wpsf_autoloader($class, TRUE);
 
-        if( class_exists($class) ) {
-            ob_start();
-            $element = new $class($field, $value, $unique);
-            $element->final_output();
-            $output .= ob_get_clean();
+        if( isset($field['instance_id']) && $force === FALSE ) {
+            $_instance = wpsf_field_registry()->get($field['instance_id']);
+            if( $_instance instanceof WPSFramework_Options ) {
+                ob_start();
+                $_instance->final_output();
+                return ob_get_clean();
+            }
+            return wpsf_add_element($field, $value, $unique, TRUE);
         } else {
-            $output .= '<p>' . esc_html__('This field class is not available!', 'wpsf-framework') . '</p>';
+            $class = 'WPSFramework_Option_' . $field ['type'];
+            wpsf_autoloader($class, TRUE);
+            if( class_exists($class) ) {
+                ob_start();
+                $element = new $class($field, $value, $unique);
+                $element->final_output();
+                $output .= ob_get_clean();
+            } else {
+                $output .= '<p>' . sprintf(esc_html__('This field class is not available! %s', 'wpsf-framework'), '<strong>' . $class . '</strong>') . ' </p > ';
+            }
         }
         return $output;
     }
 }
 
-/**
- *
- * Add framework element
- *
- * @since 1.0.0
- * @version 1.0.0
- *
- */
-if( ! function_exists('wpsf_add_element') ) {
+if( ! function_exists('wpsf_unarray_fields') ) {
     /**
-     * @param array  $field
-     * @param string $value
-     * @param string $unique
-     * @return string
+     * @return array
      */
-    function _wpsf_add_element($field = array(), $value = '', $unique = '') {
-        static $total_columns = 0;
-        $output = '';
-        $depend = '';
-        $sub = ( isset ($field ['sub']) ) ? 'sub-' : '';
-        $unique = ( isset ($unique) ) ? $unique : '';
-        $languages = wpsf_language_defaults();
-        $class = 'WPSFramework_Option_' . $field ['type'];
-        $wrap_class = ( isset ($field ['wrap_class']) ) ? ' ' . $field ['wrap_class'] : '';
-        $el_class = ( isset ($field ['title']) ) ? sanitize_title($field ['title']) : 'no-title';
-        $hidden = ( isset ($field ['show_only_language']) && ( $field ['show_only_language'] != $languages ['current'] ) ) ? ' hidden' : '';
-        $is_pseudo = ( isset ($field ['pseudo']) ) ? ' wpsf-pseudo-field' : '';
-        $_row_after = '';
-        if( isset ($field ['dependency']) ) {
-            $hidden = ' hidden';
-            $depend .= ' data-' . $sub . 'controller="' . $field ['dependency'] [0] . '"';
-            $depend .= ' data-' . $sub . 'condition="' . $field ['dependency'] [1] . '"';
-            $depend .= ' data-' . $sub . 'value="' . $field ['dependency'] [2] . '"';
-        }
-
-        if( isset($field['columns']) ) {
-            $wrap_class .= ' wpsf-column wpsf-column-' . $field['columns'];
-
-            if( 0 == $total_columns ) {
-                $wrap_class .= ' wpsf-column-first';
-                $output .= '<div class="wpsf-row">';
-            }
-
-            $total_columns += $field['columns'];
-
-            if( 12 == $total_columns ) {
-                $wrap_class .= ' wpsf-column-last';
-                $_row_after = '</div>';
-                $total_columns = 0;
-            }
-        }
-
-        $output .= '<div class="wpsf-element wpsf-element-' . $el_class . ' wpsf-field-' . $field['type'] . $is_pseudo . $wrap_class . $hidden . '"' . $depend . '>';
-
-        if( isset ($field ['title']) ) {
-            $field_desc = ( isset ($field ['desc']) ) ? '<p class="wpsf-text-desc">' . $field ['desc'] . '</p>' : '';
-            $output .= '<div class="wpsf-title"><h4>' . $field ['title'] . '</h4>' . $field_desc . '</div>';
-        }
-
-        $output .= ( isset ($field ['title']) ) ? '<div class="wpsf-fieldset">' : '';
-
-        $value = ( ! isset ($value) && isset ($field ['default']) ) ? $field ['default'] : $value;
-        $value = ( isset ($field ['value']) ) ? $field ['value'] : $value;
-
-
-        wpsf_autoloader($class, TRUE);
-
-        if( class_exists($class) ) {
-            ob_start();
-            $element = new $class ($field, $value, $unique);
-            $element->output();
-            $e_out = ob_get_clean();
-            if( $field['type'] === 'hidden' ) {
-                return $e_out;
-            }
-            $output .= $e_out;
-        } else {
-            $output .= '<p>' . esc_html__('This field class is not available!', 'wpsf-framework') . '</p>';
-        }
-
-        $output .= ( isset ($field ['title']) ) ? '</div>' : '';
-        $output .= '<div class="clear"></div>';
-        $output .= '</div>';
-
-
-        $output .= $_row_after;
-        return $output;
+    function wpsf_unarray_fields() {
+        return apply_filters('wpsf_unarray_fields_types', array( 'tab', 'group', 'fieldset', 'accordion' ));
     }
 }
+
+if( ! function_exists('wpsf_is_unarray_field') ) {
+    /**
+     * @return boolean
+     */
+    function wpsf_is_unarray_field($type) {
+        if( is_array($type) && isset($type['type']) ) {
+            return in_array($type['type'], wpsf_unarray_fields());
+        }
+        return in_array($type, wpsf_unarray_fields());
+    }
+}
+
+if( ! function_exists('wpsf_is_unarrayed') ) {
+    /**
+     * @param array $field
+     *
+     * @return bool
+     */
+    function wpsf_is_unarrayed($field = array()) {
+        if( wpsf_is_unarray_field($field) ) {
+            if( isset($field['un_array']) && $field['un_array'] === TRUE ) {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+}
+
 
 /**
  *
  * Encode string for backup options
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
 if( ! function_exists('wpsf_encode_string') ) {
     /**
      * @param $string
+     *
      * @return string
      */
     function wpsf_encode_string($string) {
@@ -150,13 +131,14 @@ if( ! function_exists('wpsf_encode_string') ) {
  *
  * Decode string for backup options
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
 if( ! function_exists('wpsf_decode_string') ) {
     /**
      * @param $string
+     *
      * @return mixed
      */
     function wpsf_decode_string($string) {
@@ -168,7 +150,7 @@ if( ! function_exists('wpsf_decode_string') ) {
  *
  * Get google font from json file
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
@@ -185,7 +167,7 @@ if( ! function_exists('wpsf_get_google_fonts') ) {
         } else {
 
             ob_start();
-            wpsf_locate_template('fields/typography/google-fonts.json');
+            wpsf_locate_template('fields / typography / google - fonts . json');
             $json = ob_get_clean();
 
             $wpsf_google_fonts = json_decode($json);
@@ -199,13 +181,14 @@ if( ! function_exists('wpsf_get_google_fonts') ) {
  *
  * Get icon fonts from json file
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
 if( ! function_exists('wpsf_get_icon_fonts') ) {
     /**
      * @param $file
+     *
      * @return array|mixed|object
      */
     function wpsf_get_icon_fonts($file) {
@@ -221,7 +204,7 @@ if( ! function_exists('wpsf_get_icon_fonts') ) {
  *
  * Array search key & value
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
@@ -230,6 +213,7 @@ if( ! function_exists('wpsf_array_search') ) {
      * @param $array
      * @param $key
      * @param $value
+     *
      * @return array
      */
     function wpsf_array_search($array, $key, $value) {
@@ -253,7 +237,7 @@ if( ! function_exists('wpsf_array_search') ) {
  *
  * Getting POST Var
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
@@ -261,6 +245,7 @@ if( ! function_exists('wpsf_get_var') ) {
     /**
      * @param        $var
      * @param string $default
+     *
      * @return string
      */
     function wpsf_get_var($var, $default = '') {
@@ -280,7 +265,7 @@ if( ! function_exists('wpsf_get_var') ) {
  *
  * Getting POST Vars
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
@@ -289,6 +274,7 @@ if( ! function_exists('wpsf_get_vars') ) {
      * @param        $var
      * @param        $depth
      * @param string $default
+     *
      * @return string
      */
     function wpsf_get_vars($var, $depth, $default = '') {
@@ -304,37 +290,50 @@ if( ! function_exists('wpsf_get_vars') ) {
     }
 }
 
-/**
- *
- * Load options fields
- *
- * @since 1.0.0
- * @version 1.0.0
- *
- */
-if( ! function_exists('wpsf_load_option_fields') ) {
-    function wpsf_load_option_fields() {
-        $located_fields = array();
-
-        foreach( glob(WPSF_DIR . '/fields/*/*.php') as $wpsf_field ) {
-            $located_fields [] = basename($wpsf_field);
-            wpsf_locate_template(str_replace(WPSF_DIR, '', $wpsf_field));
+if( ! function_exists("wpsf_js_vars") ) {
+    /**
+     * @param      $object_name
+     * @param      $l10n
+     * @param bool $with_script_tag
+     *
+     * @return string
+     */
+    function wpsf_js_vars($object_name = '', $l10n, $with_script_tag = TRUE) {
+        foreach( (array) $l10n as $key => $value ) {
+            if( ! is_scalar($value) )
+                continue;
+            $l10n[$key] = html_entity_decode((string) $value, ENT_QUOTES, 'UTF-8');
         }
 
-        $override_name = apply_filters('wpsf_framework_override', 'wpsf-framework-override');
-        $override_dir = get_template_directory() . '/' . $override_name . '/fields';
-
-        if( is_dir($override_dir) ) {
-
-            foreach( glob($override_dir . '/*/*.php') as $override_field ) {
-
-                if( ! in_array(basename($override_field), $located_fields) ) {
-
-                    wpsf_locate_template(str_replace($override_dir, '/fields', $override_field));
-                }
-            }
+        if( ! empty($object_name) ) {
+            $script = "var $object_name = " . wp_json_encode($l10n) . ';';
+        } else {
+            $script = wp_json_encode($l10n);
         }
 
-        do_action('wpsf_load_option_fields');
+        if( ! empty($after) )
+            $script .= "\n$after;";
+        if( $with_script_tag ) {
+            return ' <script type = "text/javascript" > ' . $script . '</script> ';
+        }
+        return $script;
+    }
+}
+
+if( ! function_exists('wpsf_add_errors') ) {
+    function wpsf_add_errors($errs) {
+        global $wpsf_errors;
+        if( is_array($wpsf_errors) && is_array($errs) ) {
+            $wpsf_errors = array_merge($wpsf_errors, $errs);
+        } else {
+            $wpsf_errors = $errs;
+        }
+    }
+}
+
+if( ! function_exists('wpsf_get_errors') ) {
+    function wpsf_get_errors() {
+        global $wpsf_errors;
+        return $wpsf_errors;
     }
 }

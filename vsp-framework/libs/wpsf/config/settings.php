@@ -1,4 +1,5 @@
 <?php
+
 /*-------------------------------------------------------------------------------------------------
  - This file is part of the WPSF package.                                                         -
  - This package is Open Source Software. For the full copyright and license                       -
@@ -17,9 +18,10 @@
  */
 
 function render_wpsf_icons($max = 25) {
-    $icons = json_decode(file_get_contents(WPSF_DIR . '/fields/icon/01-font-awesome.json'), TRUE);
-    $icons = ( isset($icons['icons']) ) ? $icons['icons'] : array();
-    $_max = count($icons);
+    $icons  = json_decode(file_get_contents(WPSF_DIR . '/fields/icon/01-font-awesome.json'), TRUE);
+    $icons  = ( isset($icons['icons']) ) ? $icons['icons'] : array();
+    $_max   = count($icons);
+    $return = array();
 
     $e = 0;
     while( $e <= $max ) {
@@ -27,8 +29,8 @@ function render_wpsf_icons($max = 25) {
         if( ! isset($icons[$rand]) ) {
             continue;
         }
-        $i = $icons[$rand];
-        $slug = str_replace('fa fa-', '', $i);
+        $i             = $icons[$rand];
+        $slug          = str_replace('fa fa-', '', $i);
         $return[$slug] = array(
             'label' => $slug,
             'icon'  => $i,
@@ -41,7 +43,6 @@ function render_wpsf_icons($max = 25) {
 
     return $return;
 }
-
 
 // ===============================================================================================
 // -----------------------------------------------------------------------------------------------
@@ -59,22 +60,28 @@ $options[] = array(
     // begin: fields
     'fields' => array(
         array(
-            'id'      => 'content_font',
-            'type'    => 'typography_advanced',
-            'title'   => __('Typography Advanced', ''),
-            'chosen'  => TRUE,
-            'select2' => FALSE,
-            'default' => array(
-                'family'  => 'Indie Flower',
-                'variant' => 'regular',
-                'font'    => 'google',
-                'size'    => '20',
-                'height'  => '18',
-                'color'   => '#e2e2e2',
+            'id'         => '_backbone_modal',
+            'type'       => 'model_search',
+            'options'    => 'page',
+            'query_args' => array(
+                'post_type' => array( 'product', 'product_variations' ),
+                'orderby'   => 'post_date',
+                'order'     => 'ASC',
             ),
-            'preview' => TRUE,
-            //Enable or disable preview box
-            //'preview_text' => 'hello world', //Replace preview text with any text you like.
+            'settings'   => array(
+                'id'             => 'sampleSearch',
+                'columns'        => array(),
+                'remove_columns' => array(
+                    'date',
+                ),
+            ),
+
+        ),
+        array(
+            'id'    => 'animate_css',
+            'type'  => 'animate_css',
+            'title' => 'Animate CSS',
+
         ),
         array(
             'id'      => 'unique_color_scheme',
@@ -237,6 +244,15 @@ $options[] = array(
 $options[] = array(
     'name'  => 'seperator_0',
     'title' => 'Input / UI Fields',
+    'icon'  => 'fa fa-bookmark',
+);
+// ------------------------------
+// a Custom Link                  -
+// ------------------------------
+$options[] = array(
+    'name'  => 'seperator_0',
+    'title' => 'Custom Link',
+    'href'  => 'http://google.com',
     'icon'  => 'fa fa-bookmark',
 );
 // ------------------------------
@@ -525,7 +541,7 @@ $_icons_options = array(
         'title' => 'file-code-o',
     ),
 );
-$_icons_mini = array(
+$_icons_mini    = array(
     'wheelchair-alt'      => array(
         'label' => 'wheelchair-alt',
         'icon'  => 'fa fa-wheelchair-alt',
@@ -573,7 +589,6 @@ $_icons_mini = array(
     ),
     'krw'                 => array( 'label' => 'krw', 'icon' => 'fa fa-krw', 'title' => 'krw', ),
 );
-
 
 $options[] = array(
     'name'     => 'options',
@@ -1605,8 +1620,8 @@ $options[] = array(
                 ),
 
                 array(
-                    'content' => 'Select With Chosen',
-                    'fields'  => array(
+                    'accordion_title' => 'Select With Chosen',
+                    'fields'          => array(
                         array(
                             'id'             => 'unique_select_12',
                             'type'           => 'select',
@@ -1667,12 +1682,58 @@ $options[] = array(
                             'info'       => 'and much more select options for you!',
                         ),
                     ),
-                    'id'      => 'unique_select_chosen_011',
-                    'type'    => 'accordion',
+                    'id'              => 'unique_select_chosen_011',
+                    'type'            => 'accordion',
                 ),
                 array(
-                    'content' => 'Select With Select2',
-                    'fields'  => array(
+                    'accordion_title' => 'Select With Select2',
+                    'fields'          => array(
+                        array(
+                            'id'             => 'select2_ajax_pagae1s',
+                            'type'           => 'select',
+                            'title'          => 'Select with select2 with Pages Ajax',
+                            'settings'       => array( 'is_ajax' => TRUE, 'preload' => 2 ),
+                            'query_args'     => array( 'posts_per_page' => 2 ),
+                            'options'        => 'pages',
+                            'class'          => 'select2',
+                            'default_option' => 'Select a page',
+                        ),
+
+                        array(
+                            'id'             => 'select2_multiple_ajax_pages',
+                            'type'           => 'select',
+                            'multiple'       => TRUE,
+                            'title'          => 'Select with select2 with Pages Multiple Ajax',
+                            'settings'       => array( 'is_ajax' => TRUE, 'preload' => 2 ),
+                            'query_args'     => array( 'posts_per_page' => 2 ),
+                            'options'        => 'pages',
+                            'class'          => 'select2',
+                            'default_option' => 'Select a page',
+                        ),
+
+                        array(
+                            'id'             => 'select2_ajax_categories',
+                            'type'           => 'select',
+                            'title'          => 'Select with select2 with Categories Ajax',
+                            'settings'       => array( 'is_ajax' => TRUE ),
+                            'query_args'     => array( 'hide_empty' => FALSE, ),
+                            'options'        => 'categories',
+                            'class'          => 'select2',
+                            'default_option' => 'Select a Category',
+                        ),
+
+                        array(
+                            'id'             => 'select2_ajax_categories_multiple',
+                            'type'           => 'select',
+                            'multiple'       => TRUE,
+                            'title'          => 'Select with select2 with Categories Multiple Ajax',
+                            'settings'       => array( 'is_ajax' => TRUE ),
+                            'query_args'     => array( 'hide_empty' => FALSE, ),
+                            'options'        => 'categories',
+                            'class'          => 'select2',
+                            'default_option' => 'Select a Category',
+                        ),
+
                         array(
                             'id'             => 'unique_select_112',
                             'type'           => 'select',
@@ -1733,8 +1794,8 @@ $options[] = array(
                             'info'       => 'and much more select options for you!',
                         ),
                     ),
-                    'id'      => 'unique_select_select2_011',
-                    'type'    => 'accordion',
+                    'id'              => 'unique_select_select2_011',
+                    'type'            => 'accordion',
                 ),
 
             ),
@@ -2240,6 +2301,13 @@ $options[] = array(
                     ),
                     'variant' => FALSE,
                 ),
+                array(
+                    'type'    => 'font_container',
+                    'title'   => 'font_container',
+                    'id'      => 'font_container',
+                    'preview' => TRUE,
+
+                ),
             ),
         ),
         // end: typography options
@@ -2665,7 +2733,7 @@ $options[] = array(
                 ),
 
                 array(
-                    'id'              => 'accordion_3',
+                    'id'              => 'accordion_4',
                     'type'            => 'accordion',
                     'accordion_title' => 'Accordion 1',
                     'title'           => 'Accordion With Group',
@@ -2692,6 +2760,11 @@ $options[] = array(
                     ),
                 ),
             ),
+        ),
+        array(
+            'name'  => 'seperator_0',
+            'title' => 'Input / UI Fields',
+            'icon'  => 'fa fa-bookmark',
         ),
         array(
             'name'   => 'fieldset_options',
@@ -3036,6 +3109,105 @@ $options[] = array(
                                         ),
                                     ),
                                 ),
+                                array(
+                                    'type'  => 'switcher',
+                                    'id'    => 'switcher',
+                                    'title' => 'Switcher',
+                                ),
+                                array(
+                                    'type'  => 'text',
+                                    'id'    => 'text',
+                                    'title' => 'Text',
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+
+
+                array(
+                    'id'        => 'tab_4',
+                    'type'      => 'tab',
+                    'title'     => 'Tab (Style 4)',
+                    'tab_style' => 'cmb',
+                    'sections'  => array(
+                        array(
+                            'name'   => 'section1',
+                            'title'  => 'section 1',
+                            'icon'   => 'fa fa-star',
+                            'fields' => array(
+                                array(
+                                    'type'  => 'switcher',
+                                    'id'    => 'switcher',
+                                    'title' => 'Switcher',
+                                ),
+                                array(
+                                    'type'  => 'text',
+                                    'id'    => 'text',
+                                    'title' => 'Text',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'name'   => 'tab_accordion',
+                            'title'  => 'Tab Accordion',
+                            'icon'   => 'fa fa-list',
+                            'fields' => array(
+                                array(
+                                    'id'              => 'accordion_1',
+                                    'type'            => 'accordion',
+                                    'accordion_title' => 'Accordion 1',
+                                    'title'           => 'Accordion With Title',
+                                    'fields'          => array(
+                                        array(
+                                            'type'  => 'switcher',
+                                            'id'    => 'switcher',
+                                            'title' => 'Switcher',
+                                        ),
+                                        array(
+                                            'type'  => 'text',
+                                            'id'    => 'text',
+                                            'title' => 'Text',
+                                        ),
+                                    ),
+                                ),
+                                array(
+                                    'type'  => 'switcher',
+                                    'id'    => 'switcher',
+                                    'title' => 'Switcher',
+                                ),
+                                array(
+                                    'type'  => 'text',
+                                    'id'    => 'text',
+                                    'title' => 'Text',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'name'   => 'tab_group',
+                            'title'  => 'Tab group',
+                            'icon'   => 'fa fa-object-group',
+                            'fields' => array(
+                                array(
+                                    'id'              => 'group',
+                                    'type'            => 'group',
+                                    'title'           => 'Group',
+                                    'button_title'    => 'Add More',
+                                    'accordion_title' => 'Accordion With Group',
+                                    'fields'          => array(
+                                        array(
+                                            'type'  => 'switcher',
+                                            'id'    => 'switcher',
+                                            'title' => 'Switcher',
+                                        ),
+                                        array(
+                                            'type'  => 'text',
+                                            'id'    => 'text',
+                                            'title' => 'Text',
+                                        ),
+                                    ),
+                                ),
+
                                 array(
                                     'type'  => 'switcher',
                                     'id'    => 'switcher',
@@ -3404,11 +3576,66 @@ $options[] = array(
                     'type'  => 'spacing',
                     'id'    => 'spacing',
                 ),
+            ),
+        ),
+
+        array(
+            'name'   => 'datepickers',
+            'title'  => 'DatePicker',
+            'icon'   => 'fa fa-calendar',
+            'fields' => array(
+
                 array(
                     'title' => 'Date Picker',
                     'type'  => 'date_picker',
-                    'id'    => 'date_picker',
+                    'id'    => 'date-picker',
                 ),
+
+                array(
+                    'title'    => 'Date & Time Picker',
+                    'type'     => 'date_picker',
+                    'id'       => 'date-picker3',
+                    'settings' => array(
+                        'enableTime' => TRUE,
+                        'dateFormat' => 'Y-m-d H:i',
+                    ),
+                ),
+
+                array(
+                    'title'    => 'Date Range',
+                    'type'     => 'date_picker',
+                    'id'       => 'date-picker4',
+                    'settings' => array(
+                        'mode' => 'range',
+                    ),
+                ),
+
+
+                array(
+                    'title'    => 'Inline Date Picker',
+                    'type'     => 'date_picker',
+                    'id'       => 'date-picker2',
+                    'settings' => array(
+                        'inline' => TRUE,
+                    ),
+                ),
+
+                array(
+                    'type'    => 'content',
+                    'content' => 'More information about datepicker & docs can be found @ <a href="https://chmln.github.io/flatpickr">https://chmln.github.io/flatpickr</a>',
+                ),
+                array(
+                    'type'    => 'subheading',
+                    'content' => 'Theme Options',
+                ),
+
+                array(
+                    'title' => 'Dark Theme',
+                    'type'  => 'date_picker',
+                    'id'    => 'date-picker-dark',
+                    'theme' => 'dark',
+                ),
+
             ),
         ),
     ),
@@ -4000,8 +4227,9 @@ $options[] = array(
 new WPSFramework_Settings(array(
     'menu_title'       => 'WPSF Modern',
     'menu_slug'        => 'wpsf-modern',
-    'style'            => 'modern',
+    'framework_title'  => "WPSF Settings Panel",
+    'style'            => 'simple',
     'is_sticky_header' => FALSE,
-    'is_single_page'   => FALSE,
-    'option_name'      => '_wpsf_new_option',
+    'is_single_page'   => TRUE,
+    'option_name'      => '_wpsf_new_option11a',
 ), $options);

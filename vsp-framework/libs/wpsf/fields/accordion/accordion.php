@@ -18,6 +18,7 @@
 class WPSFramework_Option_accordion extends WPSFramework_Options {
     /**
      * WPSFramework_Option_accordion constructor.
+     *
      * @param        $field
      * @param string $value
      * @param string $unique
@@ -28,9 +29,9 @@ class WPSFramework_Option_accordion extends WPSFramework_Options {
 
     public function output() {
         echo $this->element_before();
-        $fields = array_values($this->field['fields']);
-        $acc_title = ( isset($this->field['accordion_title']) ) ? $this->field['accordion_title'] : __("Accordion", 'wpsf-framework');
-        $unique_id = ( ! empty($this->field['un_array']) ) ? $this->unique : $this->unique . '[' . $this->field['id'] . ']';
+        $fields    = array_values($this->field['fields']);
+        $acc_title = ( ! empty($this->field['accordion_title']) ) ? $this->field['accordion_title'] : __("Accordion", 'wpsf-framework');
+        $unique_id = ( ! empty($this->field['un_array']) ) ? $this->unique : $this->get_unique($this->field['id']);
 
         echo '<div class="wpsf-groups wpsf-accordion">';
 
@@ -38,10 +39,10 @@ class WPSFramework_Option_accordion extends WPSFramework_Options {
 
         echo '<div class="wpsf-group-content">';
         foreach( $fields as $field ) {
-            $field_id = ( isset ($field['id']) ) ? $field['id'] : '';
-            $field_default = ( isset ($field['default']) ) ? $field['default'] : $this->value;
-            $field_value = ( isset ($this->value [$field_id]) ) ? $this->value [$field_id] : $field_default;
-            echo wpsf_add_element($field, $field_value, $unique_id);
+            $field_id      = ( isset ($field['id']) ) ? $field['id'] : '';
+            $field_default = ( isset ($field['default']) ) ? $field['default'] : FALSE;
+            $field_value   = $this->_unarray_values($field_id, $field_default);
+            echo $this->add_field($field, $field_value, $unique_id);
         }
         echo '</div>';
         echo '</div>';
@@ -50,35 +51,14 @@ class WPSFramework_Option_accordion extends WPSFramework_Options {
         echo $this->element_after();
     }
 
-    public function __output() {
-        echo $this->element_before();
-        $icons = array( 'down' => 'fa fa-angle-down', 'up' => 'fa fa-angle-up', );
-        $is_open = ( empty($this->value) ) ? FALSE : TRUE;
-        $is_open = ( isset($this->field['force_open']) && $this->field['force_open'] === TRUE ) ? TRUE : $is_open;
-        $show_icon = ( $is_open === TRUE ) ? 'up' : 'down';
-        $is_hidden = ( $is_open === TRUE ) ? '' : 'display:none;';
-        $icons = ( isset($this->field['icons']) ) ? wp_parse_args($this->field['icons'], $icons) : $icons;
-        $title = isset($this->field['content']) ? $this->field['content'] : $this->field['name'];
-        $title .= '<span class="accordion"><i class="' . $icons[$show_icon] . '" data-up="' . $icons['up'] . '" data-down="' . $icons['down'] . '"></i> </span>';
-
-        $sub_heading = array(
-            'type'    => 'subheading',
-            'id'      => $this->field ['id'] . '_heading',
-            'content' => $title,
-            'class'   => 'wpsf-accordion-heading',
+    /**
+     * @return array
+     */
+    protected function field_defaults() {
+        return array(
+            'accordion_title' => __("Accordion", 'wpsf-framework'),
+            'fields'          => array(),
+            'un_array'        => FALSE,
         );
-
-        $unique_id = $this->unique . '[' . $this->field['id'] . ']';
-
-        echo wpsf_add_element($sub_heading, '', $this->unique);
-        echo '<div class="wpsf-cover" style="' . $is_hidden . '">';
-        foreach( $this->field['fields'] as $field ) {
-            $field_id = ( isset ($field['id']) ) ? $field['id'] : '';
-            $field_default = ( isset ($field['default']) ) ? $field['default'] : $this->value;
-            $field_value = ( isset ($this->value [$field_id]) ) ? $this->value [$field_id] : $field_default;
-
-            echo wpsf_add_element($field, $field_value, $unique_id);
-        }
-        echo '</div>';
     }
 }

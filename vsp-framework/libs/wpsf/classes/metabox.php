@@ -17,12 +17,11 @@ if( ! defined('ABSPATH') ) {
  *
  * Metabox Class
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
 class WPSFramework_Metabox extends WPSFramework_Abstract {
-
     /**
      *
      * instance
@@ -40,14 +39,16 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
      * @var array
      *
      */
-    public $options = array();
+    public    $options = array();
+    protected $type    = 'metabox';
 
     /**
      * WPSFramework_Metabox constructor.
+     *
      * @param $options
      */
     public function __construct($options) {
-        $this->options = apply_filters('wpsf_metabox_options', $options);
+        $this->options   = apply_filters('wpsf_metabox_options', $options);
         $this->posttypes = array();
 
         if( ! empty ($this->options) ) {
@@ -58,6 +59,7 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
 
     /**
      * @param array $options
+     *
      * @return \class|\WPSFramework_Metabox
      */
     public static function instance($options = array()) {
@@ -86,7 +88,7 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
         global $pagenow, $typenow;
 
         if( ( $pagenow === 'post-new.php' || $pagenow === 'post.php' ) && isset($this->posttypes[$typenow]) ) {
-            wpsf_load_fields_styles();
+            wpsf_assets()->render_framework_style_scripts();
         }
     }
 
@@ -96,17 +98,18 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
      * @param $callback
      */
     public function render_meta_box_content($post, $callback) {
-        global $post, $wpsf_errors, $typenow;
+        global $post, $typenow;
 
         wp_nonce_field('wpsf-framework-metabox', 'wpsf-framework-metabox-nonce');
 
-        $unique = $callback ['args'] ['id'];
-        $sections = $callback ['args'] ['sections'];
-        $meta_value = get_post_meta($post->ID, $unique, TRUE);
-        $transient = get_transient('wpsf-mt-' . $this->get_cache_key($callback['args']));
-        $wpsf_errors = $transient ['errors'];
-        $has_nav = ( count($sections) >= 2 && $callback ['args'] ['context'] != 'side' ) ? TRUE : FALSE;
-        $show_all = ( ! $has_nav ) ? ' wpsf-show-all' : '';
+        $unique              = $callback ['args'] ['id'];
+        $sections            = $callback ['args'] ['sections'];
+        $meta_value          = get_post_meta($post->ID, $unique, TRUE);
+        $transient           = get_transient('wpsf-mt-' . $this->get_cache_key($callback['args']));
+        $transient['errors'] = isset($transient['errors']) ? $transient['errors'] : array();
+        wpsf_add_errors($transient['errors']);
+        $has_nav    = ( count($sections) >= 2 && $callback ['args'] ['context'] != 'side' ) ? TRUE : FALSE;
+        $show_all   = ( ! $has_nav ) ? ' wpsf-show-all' : '';
         $section_id = ( ! empty ($transient ['ids'] [$unique]) ) ? $transient ['ids'] [$unique] : '';
         $section_id = wpsf_get_var('wpsf-section', $section_id);
 
@@ -191,15 +194,15 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
      */
     public function save_post($post_id, $post) {
         if( wp_verify_nonce(wpsf_get_var('wpsf-framework-metabox-nonce'), 'wpsf-framework-metabox') ) {
-            $errors = array();
+            $errors    = array();
             $post_type = wpsf_get_var('post_type');
 
             foreach( $this->options as $request_value ) {
                 $transient = array();
-                $validator = new WPSFramework_Fields_Save_Sanitize;
+                $validator = new WPSFramework_DB_Save_Handler;
                 if( in_array($post_type, ( array ) $request_value ['post_type']) ) {
                     $request_key = $request_value ['id'];
-                    $request = wpsf_get_var($request_key, array());
+                    $request     = wpsf_get_var($request_key, array());
 
                     if( isset ($request ['_nonce']) ) {
                         unset ($request ['_nonce']);
@@ -208,7 +211,7 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
                     foreach( $request_value ['sections'] as $key => $section ) {
                         if( isset ($section ['fields']) ) {
                             $meta_value = get_post_meta($post_id, $request_key, TRUE);
-                            $request = $validator->loop_fields(array( 'fields' => $section['fields'] ), $request, $meta_value, TRUE);
+                            $request    = $validator->loop_fields(array( 'fields' => $section['fields'] ), $request, $meta_value);
                         }
                     }
 
@@ -221,7 +224,7 @@ class WPSFramework_Metabox extends WPSFramework_Abstract {
                     }
 
                     $transient ['ids'] [$request_key] = wpsf_get_vars('wpsf_section_id', $request_key);
-                    $transient ['errors'] = $validator->get_errors();;
+                    $transient ['errors']             = $validator->get_errors();;
                 }
 
                 set_transient('wpsf-mt-' . $this->get_cache_key($request_value), $transient, 10);

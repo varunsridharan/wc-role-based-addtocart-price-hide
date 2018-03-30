@@ -8,8 +8,152 @@
  @author     Varun Sridharan <varunsridharan23@gmail.com>                                         -
  -------------------------------------------------------------------------------------------------*/
 
-;( function ($, window, document, undefined) {
+;( function ($, window, document, wp_hooks, undefined) {
     'use strict';
+
+    var WPSF_Modal_Search;
+    WPSF_Modal_Search = window.Backbone.View.extend({
+        overlay: false,
+        isonGoing: false,
+        ajaxTimer: false,
+        Cdata: {},
+        open: function () {
+            this.$response.html('');
+            this.$el.show();
+            this.$overlay.show();
+            return this.send();
+        },
+        send: function () {
+            wp_hooks.doAction('wpsf_modal_search_ajax_start', this);
+            var $this = this;
+            if ( this.isonGoing !== false ) {
+                this.isonGoing.abort();
+            }
+
+            var settings_id, search;
+            search = this;
+            search.$spinner.show();
+            settings_id = $(".modal-" + this.modal_id).data('settingsid');
+            var settings = {};
+            if ( typeof window[settings_id] === 'object' ) {
+                settings = window[settings_id];
+            }
+
+            $.ajax(ajaxurl, {
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    search: search.$input.val(),
+                    selected: JSON.parse($this.parentElem.find(".modal_search_value textarea").val()),
+                    data: settings,
+                    action: 'wpsf-ajax',
+                    'wpsf-action': settings.ajax,
+                }
+            }).always(function () {
+                wp_hooks.doAction('wpsf_modal_search_ajax_end', search);
+                search.$spinner.hide();
+                $this.isonGoing = false;
+            }).done(function (response) {
+                var data;
+                if ( !response.success ) {
+                    search.$response.text('Error');
+                }
+                data = response.data;
+                if ( 'checkbox' === search.selectType ) {
+                    data = data.replace(/type="radio"/gi, 'type="checkbox"');
+                }
+                search.$response.html(data);
+            }).fail(function () {
+                //search.$response.text('Error');
+            });
+
+            return true;
+        },
+        close: function () {
+            this.$overlay.hide();
+            return this.$el.hide();
+        },
+        escClose: function (evt) {
+            if ( evt.which && 27 === evt.which ) {
+                return this.close();
+            } else {
+                this.maybeStartSearch(evt);
+            }
+        },
+        maybeStartSearch: function (evt) {
+            if ( this.isonGoing !== false ) {
+                this.isonGoing.abort();
+                this.isonGoing = false;
+            }
+            return this.send();
+        },
+        selectPost: function (evt) {
+            var checked, custom_data, label, search, selector;
+            search = this;
+            selector = this.selector;
+            evt.preventDefault();
+            this.parentElem.find(".modal_search_value textarea").html(JSON.stringify(this.Cdata));
+            $.WPSF_HELPER.MODEL_SEARCH_RESUT(this.parentElem, this.Cdata);
+            return this.close();
+        },
+        handleDelete: function (evt) {
+            var $elem = $(evt.target);
+            var $id = $elem.data("id");
+            if ( this.Cdata[$id] !== undefined ) {
+                delete this.Cdata[$id];
+            }
+
+            $("#wpsf-modal-search-view-response .wpsfModalInput[value='" + $id + "']").prop('checked', false);
+            this.handleSelectedPost(null);
+
+        },
+        handleSelectedPost: function (evt) {
+            if ( evt !== null ) {
+                var $elem = $(evt.target);
+                var $isCHecked = $elem.is(':checked');
+                if ( $isCHecked === true ) {
+                    this.Cdata[$elem.val()] = $elem.data('label');
+                } else {
+                    delete this.Cdata[$elem.val()];
+                }
+            }
+            var $HML = $.WPSF_HELPER.MODAL_SEARCH_RESULT_HTML(this.Cdata);
+            this.$el.find(".wpsf-modal-search-result").html($HML);
+            this.parentElem.find(".modal_search_value textarea").html(JSON.stringify(this.Cdata));
+            this.parentElem.find(".wpsf-modal-search-result").html($HML);
+
+        },
+        events: function () {
+            return {
+                "blur #wpsf-modal-search-view-input": 'maybeStartSearch',
+                // "keyup #wpsf-modal-search-view-input": 'escClose',
+                "click #wpsf-modal-search-view-submit": 'selectPost',
+                "click #wpsf-modal-search-view-search": 'send',
+                'click input.wpsfModalInput': 'handleSelectedPost',
+                "click #wpsf-modal-search-view-close": 'close',
+                'click .wpsf-modal-search-result span.close': 'handleDelete',
+            };
+        },
+        initialize: function (pars) {
+            this.$el = $(this.el);
+            this.selector = pars.selector;
+            this.modal_id = pars.modal_id;
+            this.parentElem = pars.parentElem;
+            this.Cdata = JSON.parse(this.parentElem.find(".modal_search_value textarea").html());
+            this.handleSelectedPost(null);
+            this.$response = this.$el.find('#wpsf-modal-search-view-response');
+            this.$input = this.$el.find('#wpsf-modal-search-view-input');
+            this.$spinner = this.$el.find('.spinner');
+            this.listenTo(this, 'open', this.open);
+            this.listenTo(this, 'close', this.close);
+            this.$overlay = $('#' + this.modal_id + '-overlay');
+            if ( !this.$overlay.length ) {
+                $('body').append('<div id="' + this.modal_id + '-overlay" class="ui-find-overlay"></div>');
+                return this.$overlay = $('#' + this.modal_id + '-overlay');
+            }
+        }
+    });
+
 
     $.WPSF_HELPER = {
         COLOR_PICKER: {
@@ -90,7 +234,7 @@
                 return val.substr(start, lastIndexSpace);
             }
         },
-        ADVANCED_TYPO: {
+        FONT_CONTAINER: {
             font_style: function ($fontWeightStyle) {
                 var $weight_val = '400',
                     $style_val = 'normal';
@@ -138,18 +282,18 @@
                 return {weight: $weight_val, style: $style_val}
             },
             update: function ($el) {
-                var $font_field = $el.find('.wpsf_font_field'),
-                    $parentName = $font_field.attr('data-id'),
-                    $preview = $font_field.find('#preview-' + $parentName),
-                    $fontColor = $font_field.find('.wp-picker-input-wrap input'),
-                    $fontSize = $font_field.find('input[data-font-size=""]'),
-                    $lineHeight = $font_field.find('input[data-font-line-height=""]'),
-                    $fontFamily = $font_field.find('.wpsf-typo-family'),
-                    $fontWeight = $font_field.find('.wpsf-typo-variant'),
-                    $font = $fontFamily.val(),
-                    $fontWeightStyle = $fontWeight.find(':selected').text(),
-                    $font_style = $.WPSF_HELPER.ADVANCED_TYPO.font_style($fontWeightStyle),
-                    $attrs = '',
+                var $parentName = $el.find('.wpsf_font_field').attr('data-id'),
+                    $font_field = $el.find('.wpsf-element-font-family'),
+                    $preview = $el.find('.wpsf-font-preview'),
+                    $tag = $el.find('.wpsf-element-tag select').val(),
+                    $color = $el.find('.wpsf-field-color_picker input.wp-color-picker').val(),
+                    $font = $font_field.find('.wpsf-typo-family').val(),
+                    $fontWeightStyle = $font_field.find('.wpsf-typo-variant > :selected').text(),
+                    $align = $el.find('.wpsf-element-text-align select').val(),
+                    $fontSize = $el.find('.wpsf-element-font-size input').val(),
+                    $lineHeight = $el.find('.wpsf-element-line-height input').val(),
+                    $letterSpacing = $el.find('.wpsf-element-letter-spacing input').val(),
+                    $font_style = $.WPSF_HELPER.FONT_CONTAINER.font_style($fontWeightStyle),
                     href = 'http://fonts.googleapis.com/css?family=' + $font + ':' + $font_style.weight,
                     html = '<link href="' + href + '" class="wpsf-font-preview-' + $parentName + '" rel="stylesheet" type="text/css" />';
 
@@ -159,16 +303,35 @@
                     jQuery('head').append(html);
                 }
 
-                $attrs = ' font-family:' + $font + '; ' +
+                if ( $fontSize === '' || $fontSize === undefined ) {
+                    $fontSize = '18px';
+                }
+
+                if ( $letterSpacing === '' || $letterSpacing === undefined ) {
+                    $letterSpacing = '1px';
+                }
+
+                if ( $lineHeight === '' || $lineHeight === undefined ) {
+                    $lineHeight = '20px';
+                }
+
+                var $attrs = ' font-family:' + $font + '; ' +
                     ' font-weight:' + $font_style.weight + '; ' +
                     ' font-style:' + $font_style.style + '; ' +
-                    ' color:' + $fontColor.val() + ' !important; ' +
-                    ' line-height:' + $lineHeight.val() + 'px !important; ' +
-                    ' font-size:' + $fontSize.val() + 'px !important; ';
+                    ' text-align:' + $align + '; ' +
+                    ' color: ' + $color + ';' +
+                    ' font-size:' + $.WPSF_HELPER.CSS_BUILDER.validate($fontSize) + '; ' +
+                    ' letter-spacing:' + $.WPSF_HELPER.CSS_BUILDER.validate($letterSpacing) + '; ' +
+                    ' line-height:' + $.WPSF_HELPER.CSS_BUILDER.validate($lineHeight) + '; ';
 
-                $preview.attr("style", $attrs);
+                var $text = $preview.text();
+                $preview.html('');
+                $preview.append($('<' + $tag + '>' + $text + '</' + $tag + '>'));
+                $preview.find($tag).attr("style", $attrs);
+
             }
         },
+
         NAV_BAR: {
             modern: function ($el, $single_page) {
                 var $this = $el,
@@ -193,7 +356,6 @@
                             if ( $parent ) {
                                 var $is_parent = $parent + '-';
                             }
-
                             $this.find('#wpsf-tab-' + $is_parent + $target).show().siblings().hide();
                             $nav.find('a').removeClass('wpsf-section-active');
                             $el.addClass('wpsf-section-active');
@@ -257,7 +419,7 @@
                     $reset_parent.val($parent);
 
                     $('body').trigger('wpsf_settings_nav_updated', [$parent, $target, $el]);
-                })
+                });
 
                 if ( $single_page === 'no' ) {
                     var $parent = $main_nav.find('a.nav-tab-active').data('section');
@@ -312,6 +474,51 @@
 
             return $final_data;
         },
+        ELM_ARGS_TYPE: function ($args) {
+            $.each($args, function ($code, $value) {
+                if ( $value == '1' ) {
+                    $args[$code] = true;
+                } else if ( $value == '0' ) {
+                    $args[$code] = false;
+                }
+
+            });
+            return $args;
+
+        },
+        MODAL_SEARCH_RESULT_HTML: function ($result) {
+            var $HTML = '<ul>';
+            if ( typeof $result === 'object' ) {
+                $.each($result, function ($Key, $values) {
+                    $HTML += '<li> <span class="id">#' + $Key + '</span><span class="label">' + $values + '</span> ';
+
+                    $HTML += '<span data-id="' + $Key + '" class="dashicons dashicons-no-alt close"></span>';
+
+                    $HTML += '</li>';
+                });
+            }
+
+            $HTML += '</ul>';
+            return $HTML;
+        },
+        MODEL_SEARCH_RESUT: function ($parentEleme, $result) {
+            $parentEleme.find(".wpsf-modal-search-result").html($.WPSF_HELPER.MODAL_SEARCH_RESULT_HTML($result));
+            $parentEleme.find(".wpsf-modal-search-result span.close").on("click", function () {
+                var $JSON = JSON.parse($parentEleme.find(".modal_search_value textarea").html());
+                var $clicked = $(this).data('id');
+                var $h = $(this);
+
+                if ( $JSON[$clicked] !== undefined ) {
+                    delete  $JSON[$clicked];
+                    $h.parent().fadeOut('fast', function () {
+                        $(this).remove();
+                    })
+                }
+
+
+                $parentEleme.find(".modal_search_value textarea").html(JSON.stringify($JSON));
+            });
+        }
     };
     $.WPSF_DEPENDENCY = function (el, param) {
         var base = this;
@@ -393,7 +600,39 @@
     };
     $.fn.WPSF_SELECT2 = function () {
         return this.each(function () {
-            $(this).select2();
+            var $settings = {};
+            if ( $(this).attr("data-has-settings") === 'yes' ) {
+                var $parent = $(this).parent();
+                var $request_param = JSON.parse($parent.find('.wpsf-element-settings').html());
+                $settings = {
+                    ajax: {
+                        cache: true,
+                        url: ajaxurl,
+                        dataType: 'json',
+                        data: function ($term) {
+                            $request_param['s'] = $term['term'];
+                            return $request_param;
+                        },
+                        method: 'post',
+                        processResults: function (data, params) {
+                            var terms = [];
+                            if ( data ) {
+                                jQuery.each(data, function (id, text) {
+                                    terms.push({id: id, text: text});
+                                });
+                            }
+                            return {
+                                results: terms
+                            };
+                        }
+                    }
+                }
+            }
+
+            if ( $.WPSF.is_in_popup === true ) {
+                $settings['dropdownParent'] = $('#wpsf-shortcode-dialog');
+            }
+            $(this).select2($settings);
         });
     };
     $.fn.WPSF_IMAGE_SELECT = function () {
@@ -413,7 +652,6 @@
                 connectWith: $disabled,
                 placeholder: 'ui-sortable-placeholder',
                 update: function (event, ui) {
-
                     var $el = ui.item.find('input');
 
                     if ( ui.item.parent().hasClass('wpsf-enabled') ) {
@@ -422,13 +660,14 @@
                         $el.attr('name', $el.attr('name').replace('enabled', 'disabled'));
                     }
 
+                    $this.trigger("wpsf-sorter-updated");
                 }
             });
 
             // avoid conflict
             $disabled.sortable({
                 connectWith: $enabled,
-                placeholder: 'ui-sortable-placeholder'
+                placeholder: 'ui-sortable-placeholder',
             });
 
         });
@@ -610,7 +849,6 @@
                 var _this = $(this),
                     _type = _this.find(':selected').data('type') || 'custom',
                     _variants = _this.find(':selected').data('variants');
-                console.log(_variants);
                 if ( variants_select.length ) {
                     variants_select.find('option').remove();
                     $.each(_variants.split('|'), function (key, text) {
@@ -867,6 +1105,8 @@
                         $wpsf_link_submit.remove(),
                         $("#wp-link-cancel").unbind("click.wpsf-wpLink"),
                         window.wpLink.textarea = "";
+
+                    $this.trigger('wpsf-links-updated');
                 });
 
                 $("#wp-link-cancel").unbind("click.wpsf-wpLink").bind("click.wpsf-wpLink", function (e) {
@@ -875,7 +1115,9 @@
                         $wpsf_link_submit.unbind("click.wpsf-wpLink"),
                         $wpsf_link_submit.remove(),
                         $("#wp-link-cancel").unbind("click.wpsf-wpLink"),
-                        window.wpLink.textarea = ""
+                        window.wpLink.textarea = "";
+
+                    $this.trigger('wpsf-links-updated');
                 });
             })
         })
@@ -1048,16 +1290,15 @@
             });
         })
     };
-    $.fn.WPSF_ADVANCED_TYPOGRAPHY = function () {
+    $.fn.WPSF_FONT_CONTAINER = function () {
         return this.each(function () {
-            var $main = $(this);
-            $main.find('.wpsf-font-preview').attr('contenteditable', true);
-            $.WPSF_HELPER.ADVANCED_TYPO.update($main);
-
-            $main.find(':input').on('change', function () {
-                $.WPSF_HELPER.ADVANCED_TYPO.update($main);
+            var $this = $(this);
+            $.WPSF_HELPER.FONT_CONTAINER.update($this);
+            $this.find(':input').on('change', function () {
+                $.WPSF_HELPER.FONT_CONTAINER.update($this);
             });
         })
+
     };
     $.fn.WPSF_TOOLTIP = function () {
         return this.each(function () {
@@ -1066,6 +1307,57 @@
                 container: 'body'
             });
         });
+    };
+    $.fn.WPSF_ANIMATE_CSS = function () {
+        return this.each(function () {
+            var $parent = $(this);
+            $parent.find("select").on('change', function () {
+                var $val = $(this).val();
+                var $h3 = $parent.find('.animation-preview h3');
+                $h3.removeClass();
+                $h3.addClass($val + ' animated ').one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
+                    $(this).removeClass();
+                });
+            })
+        })
+    };
+    $.fn.WPSF_DATE_PICKER = function () {
+        return this.each(function () {
+            var $input = $(this).find('input.wpsf-datepicker');
+            var $INPUTID = $input.data('datepicker-id');
+            var $settings = {};
+            if ( typeof window[$INPUTID] == 'object' ) {
+                $settings = window[$INPUTID];
+            }
+            $settings = $.WPSF_HELPER.ELM_ARGS_TYPE($settings);
+            $input.flatpickr($settings);
+        });
+    };
+
+
+    $.fn.WPSF_MODEL_SEARCH = function () {
+        return this.each(function () {
+            var $this = $(this);
+            var $value = {};
+            if ( $(this).find(".modal_search_value textarea").html() !== '' ) {
+                $value = JSON.parse($(this).find(".modal_search_value textarea").html());
+            } else {
+                $(this).find(".modal_search_value textarea").html(JSON.stringify($value));
+            }
+
+            $.WPSF_HELPER.MODEL_SEARCH_RESUT($(this), $value);
+
+            $(this).find('.wpsf-modal-search-button').on('click', function (e) {
+                var WPSFMS;
+                WPSFMS = new WPSF_Modal_Search({
+                    el: '#wpsf-modal-search-view-' + $(this).data('id'),
+                    modal_id: $(this).data('id'),
+                    selector: '#wpsf-modal-search-view-' + $(this).data('id'),
+                    parentElem: $this,
+                });
+                WPSFMS.trigger('open');
+            });
+        })
     };
     /*$.fn.WPSF_DATE_PICKER = function () {
         return this.each(function () {
@@ -1184,10 +1476,12 @@
         return this.each(function () {
             $.WPSF.reload_fields($(this));
         });
-    }
+    };
 
     $.WPSF = {
         body: $('body'),
+
+        is_in_popup: false,
 
         icons_manager: function () {
             var base = this,
@@ -1244,7 +1538,8 @@
                             type: 'POST',
                             url: ajaxurl,
                             data: {
-                                action: 'wpsf-get-icons'
+                                action: 'wpsf-ajax',
+                                "wpsf-action": "wpsf-get-icons",
                             },
                             success: function (content) {
                                 $load.html(content);
@@ -1373,12 +1668,14 @@
                                 shortcode: shortcode_name
                             },
                             success: function (content) {
+                                $.WPSF.is_in_popup = true;
                                 $shortcodeload.html(content);
                                 $insert.parent().removeClass('hidden');
                                 shortcode_clone = $('.wpsf-shortcode-clone', $dialog).clone();
                                 $shortcodeload.WPSF_DEPENDENCY();
                                 $shortcodeload.WPSF_DEPENDENCY('sub');
                                 $shortcodeload.WPSF_RELOAD();
+                                $.WPSF.is_in_popup = false;
                             }
                         });
 
@@ -1522,7 +1819,7 @@
                 // cloner button
                 var cloned = 0;
                 $dialog.on('click', '#shortcode-clone-button', function (e) {
-
+                    $.WPSF.is_in_popup = true;
                     e.preventDefault();
 
                     // clone from cache
@@ -1547,6 +1844,7 @@
                     // reloadPlugins
                     cloned_el.WPSF_DEPENDENCY('sub');
                     cloned_el.WPSF_RELOAD();
+                    $.WPSF.is_in_popup = false;
                     cloned++;
 
                 });
@@ -1638,10 +1936,13 @@
             $('.wpsf-field-color-picker', $this).WPSF_COLOR_PICKER();
             $('.wpsf-field-css_builder', $this).WPSF_CSS_BUILDER();
             $('input[data-limit-element="1"],textarea[data-limit-element="1"]', $this).WPSF_LIMITER();
-            $('.wpsf-field-typography_advanced', $this).WPSF_ADVANCED_TYPOGRAPHY();
+            $('.wpsf-field-font_container', $this).WPSF_FONT_CONTAINER();
             $('.wpsf-field-typography', $this).WPSF_TYPOGRAPHY();
             $('.wpsf-help', $this).WPSF_TOOLTIP();
-
+            $('.wpsf-field-animate_css', $this).WPSF_ANIMATE_CSS();
+            $('[data-toggle="wpsftooltip"]').WPSF_TOOLTIP();
+            $('.wpsf-field-date_picker', $this).WPSF_DATE_PICKER();
+            $('.wpsf-field-model_search', $this).WPSF_MODEL_SEARCH();
         },
 
         widget_reload: function () {
@@ -1711,11 +2012,11 @@
 
         $('.wpsf-framework').WPSF_TAB_NAVIGATION();
         $('.wpsf-content, .wp-customizer, .widget-content, .wpsf-taxonomy , .wpsf-wc-metabox-fields').WPSF_DEPENDENCY();
-        $('.wpsf-framework, #widgets-right').WPSF_RELOAD()
+        $('.wpsf-framework, #widgets-right').WPSF_RELOAD();
         $('.wpsf-taxonomy').WPSF_TAXONOMY();
         $('.wpsf-field-group').WPSF_GROUP();
         $('.wpsf-header').WPSF_STICKY_HEADER();
         $('.wpsf-reset-confirm, .wpsf-import-backup').WPSF_RESET_CONFIRM();
         $('.wpsf-save').WPSF_SAVE();
     });
-} )(jQuery, window, document);
+} )(jQuery, window, document, wp.hooks);

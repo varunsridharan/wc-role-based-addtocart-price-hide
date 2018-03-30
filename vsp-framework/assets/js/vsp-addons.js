@@ -1,14 +1,103 @@
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var $vsp_addons_list = new Vue({
+    el: "#vspAddonListing",
+    template: '#VSPAddonsListingTemplate',
+    methods: {
+        getPluginStatusLabel: function getPluginStatusLabel(label) {
+            if (this.status[label] !== undefined) {
+                return this.status[label];
+            }
+        },
+        change_category: function change_category(cat) {
+            this.current_category = cat;
+        },
+        is_show_cateogry: function is_show_cateogry(addon) {
+            if (this.current_category === 'all') {
+                return true;
+            } else if (this.current_category === 'inactive' && addon.is_active === false) {
+                return true;
+            } else if (this.current_category === 'active' && addon.is_active === true) {
+                return true;
+            } else if (addon.category !== undefined) {
+                return _.hasIn(addon.category, this.current_category);
+            }
+
+            return false;
+        },
+        pluginViewUrl: function pluginViewUrl(addon, file) {
+            var $data = _.replace(this.text.plugin_view_url, '{{slug}}', file);
+            $data = _.replace($data, '{{addon.addon_path_md5}}', addon.addon_path_md5);
+            return $data;
+        },
+        addonHandleButton: function addonHandleButton(addon, file, $type) {
+            var $this = this;
+            $.VSP_ADDONS.blockUI(addon.addon_path_md5);
+            var $parentDIV = jQuery('div#' + addon.addon_path_md5);
+            var $type = $type;
+            wp.ajax.send({
+                data: {
+                    hook_slug: vsp_addons_settings.hook_slug,
+                    addon_slug: file,
+                    addon_action: $type,
+                    addon_pathid: addon.addon_path_md5,
+                    action: "vsp-addon-action"
+                },
+                error: function error(res) {
+                    $.VSP_HELPER.ajax_callback(res);
+                    $.VSP_ADDONS.unblock(addon.addon_path_md5);
+                },
+                success: function success(response) {
+                    $.VSP_HELPER.ajax_callback(response);
+                    $.VSP_ADDONS.unblock(addon.addon_path_md5);
+
+                    if ($type === 'activate') {
+                        $this.pdata[file].is_active = true;
+                    } else {
+                        $this.pdata[file].is_active = false;
+                    }
+                }
+            });
+        }
+    },
+    computed: {
+        cats: function cats() {
+            if (this.categoires === undefined) {
+                var $arr = this.pdata;
+                var $cats = this.default_cats;
+                _.forEach($arr, function (value, key) {
+                    if (_typeof(value.category) !== undefined) {
+                        _.merge($cats, value.category);
+                    }
+                });
+
+                this.categoires = $cats;
+                this.category_slugs = _.keys($cats);
+                this.current_category = _.head(this.category_slugs);
+                return $cats;
+            }
+
+            return this.categoires;
+        }
+    },
+    data: {
+        pdata: vsp_addons_settings.plugin_data,
+        status: vsp_addons_settings.plugin_status,
+        default_cats: vsp_addons_settings.default_cats,
+        categories: null,
+        category_slugs: null,
+        current_category: null,
+        text: vsp_addons_settings.texts
+    }
+});
+
 ;
-( function ($, window, document, undefined) {
+(function ($, window, document) {
     'use strict';
 
     $.VSP_ADDONS = $.VSP_ADDONS || {};
-
-    $.VSP_ADDONS.pending_ajax_requets = [];
-
-    $.VSP_ADDONS.addonsHTML = '';
-
-    $.VSP_ADDONS.is_ajax_ongoing = false;
 
     $.VSP_ADDONS.blockUI = function (id) {
         $('div#' + id).toggleClass("vsp-requested");
@@ -19,113 +108,10 @@
                 opacity: 0.6
             }
         });
-    }
+    };
 
     $.VSP_ADDONS.unblock = function (id) {
         $('div#' + id).toggleClass("vsp-requested");
         $('div#' + id).unblock();
-    }
-
-    $.VSP_ADDONS.kick_start_addon_ajax = function () {
-        $.VSP_ADDONS.is_ajax_ongoing = true;
-        if ( $.VSP_ADDONS.pending_ajax_requets[0] !== undefined ) {
-            var $elem = $.VSP_ADDONS.pending_ajax_requets[0];
-            var $PARENTDIV = $elem.attr("data-outline");
-            var $type = 'activate';
-            $PARENTDIV = $("div#" + $PARENTDIV);
-            var $path_id = $PARENTDIV.data('pathid');
-            if ( $elem.hasClass("vsp-deactive-addon") ) {
-                $type = 'deactivate';
-            }
-
-            $.ajax({
-                url: ajaxurl,
-                method: "POST",
-                data: {
-                    hook_slug: vsp_addons_settings.hook_slug,
-                    addon_slug: $elem.attr("data-filename"),
-                    addon_action: $type,
-                    addon_pathid: $path_id,
-                    action: "vsp-addon-action",
-                }
-            }).done(function (response) {
-                var $AjaxDiv = $PARENTDIV.find(".vsp_addon_ajax_response");
-                $AjaxDiv.removeClass("vsp_ajax_error");
-                $AjaxDiv.removeClass("vsp_ajax_success");
-                $AjaxDiv.hide();
-                if ( response.success === true ) {
-                    $PARENTDIV.toggleClass("addon-inactive");
-                    $PARENTDIV.toggleClass("addon-active");
-                    $.VSP_ADDONS.update_action_buttons();
-                    $AjaxDiv.addClass("vsp_ajax_success");
-                } else {
-                    $AjaxDiv.addClass("vsp_ajax_error");
-                }
-
-                $AjaxDiv.html(response.data.msg);
-                $AjaxDiv.fadeIn('fast', function () {
-                    setTimeout(function () {
-                        $AjaxDiv.fadeOut("slow")
-                    }, 4000);
-                });
-            }).always(function () {
-                $.VSP_ADDONS.unblock($PARENTDIV.attr('id'));
-                $.VSP_ADDONS.pending_ajax_requets.shift();
-                $.VSP_ADDONS.kick_start_addon_ajax();
-            });
-        } else {
-            $.VSP_ADDONS.is_ajax_ongoing = false;
-        }
-    }
-
-    $.VSP_ADDONS.handle_action_clicks = function () {
-        var $ID = $(this).attr("data-outline");
-        if ( !$('div#' + $ID).hasClass("vsp-requested") ) {
-            $.VSP_ADDONS.pending_ajax_requets.push($(this));
-
-            if ( $.VSP_ADDONS.is_ajax_ongoing === false ) {
-                $.VSP_ADDONS.kick_start_addon_ajax();
-            }
-            $.VSP_ADDONS.blockUI($ID);
-        }
-    }
-
-    $.VSP_ADDONS.update_action_buttons = function () {
-        $(".vsp-deactive-addon, .vsp-active-addon").hide();
-        $(".vsp-deactive-addon, .vsp-active-addon").attr('disabled', 'disabled');
-        $("div.addon-inactive .vsp-active-addon").show().removeAttr("disabled");
-        $("div.addon-active .vsp-deactive-addon").show().removeAttr("disabled");
-        $.VSP_ADDONS.addonsHTML = $(".vsp_addon_listing").clone();
-    }
-
-    $(document).ready(function () {
-        $.VSP_ADDONS.update_action_buttons();
-
-        $('body').on("click", "div.vsp_addon_listing button.vsp-active-addon, div.vsp_addon_listing button.vsp-deactive-addon", $.VSP_ADDONS.handle_action_clicks);
-
-        if ( $("ul.vsp-addons-category-listing").length > 0 ) {
-            $(".vsp_settings_content").remove();
-            $("p.submit").remove();
-            $("ul.vsp-addons-category-listing li:first").addClass('current');
-            $("ul.vsp-addons-category-listing a").click(function () {
-                var $elem = $(this);
-                var $cat = $elem.parent().attr("data-category");
-                $("ul.vsp-addons-category-listing li").removeClass("current");
-                $elem.parent().addClass('current');
-
-                if ( $cat == 'all' ) {
-                    $(".vsp-single-addon").show();
-                } else {
-                    $(".vsp-single-addon").hide();
-                    $('.addon-' + $cat).fadeIn();
-                }
-
-            });
-
-            $('body').on("keyup", ".wp-filter-search", function () {
-                var $html = $.VSP_ADDONS.addonsHTML.clone();
-            });
-        }
-    });
-
-} )(jQuery, window, document);
+    };
+})(jQuery, window, document);

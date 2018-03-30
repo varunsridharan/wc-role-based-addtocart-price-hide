@@ -17,13 +17,14 @@ if( ! defined('ABSPATH') ) {
  *
  * Field: Background
  *
- * @since 1.0.0
+ * @since   1.0.0
  * @version 1.0.0
  *
  */
 class WPSFramework_Option_background extends WPSFramework_Options {
     /**
      * WPSFramework_Option_background constructor.
+     *
      * @param        $field
      * @param string $value
      * @param string $unique
@@ -32,6 +33,9 @@ class WPSFramework_Option_background extends WPSFramework_Options {
         parent::__construct($field, $value, $unique);
     }
 
+    /**
+     * @return
+     */
     public function output() {
         echo $this->element_before();
 
@@ -50,9 +54,9 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             extract($this->field ['settings']);
         }
 
-        $upload_type = ( isset ($upload_type) ) ? $upload_type : 'image';
+        $upload_type  = ( isset ($upload_type) ) ? $upload_type : 'image';
         $button_title = ( isset ($button_title) ) ? $button_title : esc_html__('Upload', 'wpsf-framework');
-        $frame_title = ( isset ($frame_title) ) ? $frame_title : esc_html__('Upload', 'wpsf-framework');
+        $frame_title  = ( isset ($frame_title) ) ? $frame_title : esc_html__('Upload', 'wpsf-framework');
         $insert_title = ( isset ($insert_title) ) ? $insert_title : esc_html__('Use Image', 'wpsf-framework');
 
         echo '<div class="wpsf-field-upload">';
@@ -62,7 +66,7 @@ class WPSFramework_Option_background extends WPSFramework_Options {
 
         // background attributes
         echo '<fieldset>';
-        echo wpsf_add_element(array(
+        echo $this->add_field(array(
             'pseudo'     => TRUE,
             'id'         => $this->field ['id'] . '_repeat',
             'type'       => 'select',
@@ -77,9 +81,9 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             'attributes' => array(
                 'data-atts' => 'repeat',
             ),
-            'value'      => $this->value ['repeat'],
-        ));
-        echo wpsf_add_element(array(
+
+        ), $this->value['repeat']);
+        echo $this->add_field(array(
             'pseudo'     => TRUE,
             'type'       => 'select',
             'id'         => $this->field ['id'] . '_position',
@@ -98,9 +102,8 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             'attributes' => array(
                 'data-atts' => 'position',
             ),
-            'value'      => $this->value ['position'],
-        ));
-        echo wpsf_add_element(array(
+        ), $this->value ['position']);
+        echo $this->add_field(array(
             'pseudo'     => TRUE,
             'type'       => 'select',
             'name'       => $this->element_name('[attachment]'),
@@ -112,9 +115,8 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             'attributes' => array(
                 'data-atts' => 'attachment',
             ),
-            'value'      => $this->value ['attachment'],
-        ));
-        echo wpsf_add_element(array(
+        ), $this->value ['attachment']);
+        echo $this->add_field(array(
             'pseudo'     => TRUE,
             'type'       => 'select',
             'id'         => $this->field ['id'] . '_size',
@@ -129,9 +131,9 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             'attributes' => array(
                 'data-atts' => 'size',
             ),
-            'value'      => $this->value ['size'],
-        ));
-        echo wpsf_add_element(array(
+
+        ), $this->value ['size']);
+        echo $this->add_field(array(
             'pseudo'     => TRUE,
             'id'         => $this->field ['id'] . '_color',
             'type'       => 'color_picker',
@@ -139,12 +141,20 @@ class WPSFramework_Option_background extends WPSFramework_Options {
             'attributes' => array(
                 'data-atts' => 'bgcolor',
             ),
-            'value'      => $this->value ['color'],
             'default'    => ( isset ($this->field ['default'] ['color']) ) ? $this->field ['default'] ['color'] : '',
             'rgba'       => ( isset ($this->field ['rgba']) && $this->field ['rgba'] === FALSE ) ? FALSE : '',
-        ));
+        ), $this->value ['color']);
         echo '</fieldset>';
 
         echo $this->element_after();
+    }
+
+    /**
+     * @return array
+     */
+    protected function field_defaults() {
+        return array(
+            'settings' => array(),
+        );
     }
 }

@@ -13,11 +13,7 @@ if( ! defined('ABSPATH') ) {
     die ();
 }
 
-
-
-
 /**
- * Small Update From PHPStrom
  * ------------------------------------------------------------------------------------------------
  * WordPress-Settings-Framework Framework
  * A Lightweight and easy-to-use WordPress Options Framework
@@ -36,14 +32,34 @@ if( ! defined('ABSPATH') ) {
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  * ------------------------------------------------------------------------------------------------
  */
-
+add_action('after_setup_theme', 'wpsf_framework_init');
 require_once plugin_dir_path(__FILE__) . '/wpsf-framework-path.php';
+
+
+if( ! function_exists('wpsf_registry') ) {
+    /**
+     * @return null|\WPSFramework_Registry
+     */
+    function wpsf_registry() {
+        return WPSFramework_Registry::instance();
+    }
+}
+
+if( ! function_exists('wpsf_field_registry') ) {
+    /**
+     * @return null|\WPSFramework_Field_Registry
+     */
+    function wpsf_field_registry() {
+        return WPSFramework_Field_Registry::instance();
+    }
+}
 
 if( ! function_exists("wpsf_template") ) {
     /**
      * @param       $override_location
      * @param       $template_name
      * @param array $args
+     *
      * @return bool
      */
     function wpsf_template($override_location, $template_name, $args = array()) {
@@ -65,10 +81,11 @@ if( ! function_exists("wpsf_autoloader") ) {
     /**
      * @param      $class
      * @param bool $check
+     *
      * @return bool
      */
     function wpsf_autoloader($class, $check = FALSE) {
-        if( $class === TRUE && class_exists($class) === TRUE ) {
+        if( $class === TRUE && class_exists($class, FALSE) === TRUE ) {
             return TRUE;
         }
 
@@ -76,18 +93,29 @@ if( ! function_exists("wpsf_autoloader") ) {
             $path = strtolower(substr($class, 20));
             wpsf_locate_template('fields/' . $path . '/' . $path . '.php');
         } else if( 0 === strpos($class, 'WPSFramework_') ) {
-            $path = strtolower(substr(str_replace('_', '-', $class), 13));
-            include( 'classes/' . $path . '.php' );
+            $path  = strtolower(substr(str_replace('_', '-', $class), 13));
+            $path1 = WPSF_DIR . '/classes/' . $path . '.php';
+            $path2 = WPSF_DIR . '/classes/core/' . $path . '.php';
+
+            if( file_exists($path1) ) {
+                include( $path1 );
+            } else if( file_exists($path2) ) {
+                include( $path2 );
+            }
         }
         return TRUE;
     }
 }
 
-if( ! function_exists('wpsf_framework_init') && ! class_exists('WPSFramework') ) {
+if( ! function_exists('wpsf_framework_init') ) {
     function wpsf_framework_init() {
+        if( class_exists('WPSFramework') ) {
+            return;
+        }
 
-        defined('WPSF_ACTIVE_LIGHT_THEME') or define('WPSF_ACTIVE_LIGHT_THEME', FALSE);
-        // helpers
+        /**
+         * Include WPSF Required Default Functions
+         */
         require_once( WPSF_DIR . '/functions/fallback.php' );
         require_once( WPSF_DIR . '/functions/helpers.php' );
         require_once( WPSF_DIR . '/functions/actions.php' );
@@ -95,62 +123,33 @@ if( ! function_exists('wpsf_framework_init') && ! class_exists('WPSFramework') )
         require_once( WPSF_DIR . '/functions/sanitize.php' );
         require_once( WPSF_DIR . '/functions/validate.php' );
 
-        // classes
-        require_once( WPSF_DIR . '/classes/abstract.php' );
-        require_once( WPSF_DIR . '/classes/options.php' );
-        require_once( WPSF_DIR . '/classes/framework.php' );
+        if( defined('WPSF_VC') && WPSF_VC === TRUE ) {
+            require_once( WPSF_DIR . '/functions/visual-composer.php' );
+        }
 
-        wpsf_load_options();
-        add_action('widgets_init', 'wpsf_framework_widgets', 1);
+        /**
+         * Include WPSF Required Default Classes
+         */
+        require_once( WPSF_DIR . '/classes/core/registry.php' );
+        require_once( WPSF_DIR . '/classes/core/field_registry.php' );
+        require_once( WPSF_DIR . '/classes/core/abstract.php' );
+        require_once( WPSF_DIR . '/classes/core/fields.php' );
+        require_once( WPSF_DIR . '/classes/core/wpsf-ajax.php' );
+        require_once( WPSF_DIR . '/classes/core/wpsf-query.php' );
+        require_once( WPSF_DIR . '/classes/core/options.php' );
+
         spl_autoload_register('wpsf_autoloader');
+        wpsf_registry();
+        wpsf_field_registry();
+
+        add_action('widgets_init', 'wpsf_framework_widgets', 10);
         do_action("wpsf_framework_loaded");
     }
-
-    add_action('plugins_loaded', 'wpsf_framework_init', 1);
-    add_filter('widgets_init', 'wpsf_framework_widgets', 10);
 }
 
 if( ! function_exists('wpsf_framework_widgets') ) {
     function wpsf_framework_widgets() {
         wpsf_locate_template('classes/widget.php');
         do_action('wpsf_widgets');
-    }
-}
-
-if( ! function_exists('wpsf_register_settings') ) {
-    /**
-     * @param string $slug
-     */
-    function wpsf_register_settings($slug = '') {
-        $ex_data = get_option('_wpsf_registered_settings', TRUE);
-        if( ! is_array($ex_data) ) {
-            $ex_data = array();
-        }
-
-        if( ! in_array($slug, $ex_data) ) {
-            $ex_data[] = $slug;
-        }
-
-        update_option('_wpsf_registered_settings', $ex_data);
-    }
-}
-
-if( ! function_exists("wpsf_load_options") ) {
-    function wpsf_load_options() {
-
-        $ex_data = get_option('_wpsf_registered_settings', TRUE);
-        if( ! is_array($ex_data) ) {
-            $ex_data = array();
-        }
-
-        if( ! empty($ex_data) ) {
-            foreach( $ex_data as $slug ) {
-                $mslug = ltrim($slug, "_");
-                $mslug = rtrim($mslug, "_");
-                $data = get_option($slug, TRUE);
-                $data = ( ! is_array($data) ) ? array() : $data;
-                $GLOBALS[$mslug] = $data;
-            }
-        }
     }
 }

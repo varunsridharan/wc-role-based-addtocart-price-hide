@@ -17,10 +17,12 @@
  */
 class WPSFramework_User_Profile extends WPSFramework_Abstract {
     private static $_instance = NULL;
-    public $options = array();
+    public         $options   = array();
+    protected      $type      = 'user_profile';
 
     /**
      * WPSFramework_User_Profile constructor.
+     *
      * @param array $options
      */
     public function __construct($options = array()) {
@@ -32,32 +34,12 @@ class WPSFramework_User_Profile extends WPSFramework_Abstract {
      */
     public function init($options) {
         $this->options = $options;
-        add_action('load-profile.php', array(
-            &$this,
-            'map_user_info',
-        ));
-        add_action('load-user-edit.php', array(
-            &$this,
-            'map_user_info',
-        ));
-        add_action('show_user_profile', array(
-            &$this,
-            'custom_user_profile_fields',
-        ), 10, 1);
-        add_action('edit_user_profile', array(
-            &$this,
-            'custom_user_profile_fields',
-        ), 10, 1);
-
-        add_action('personal_options_update', array(
-            $this,
-            'save_customer_meta_fields',
-        ), 10, 2);
-        add_action('edit_user_profile_update', array(
-            $this,
-            'save_customer_meta_fields',
-        ), 10, 2);
-
+        add_action('load-profile.php', array( &$this, 'map_user_info' ));
+        add_action('load-user-edit.php', array( &$this, 'map_user_info', ));
+        add_action('show_user_profile', array( &$this, 'custom_user_profile_fields', ), 10, 1);
+        add_action('edit_user_profile', array( &$this, 'custom_user_profile_fields', ), 10, 1);
+        add_action('personal_options_update', array( $this, 'save_customer_meta_fields', ), 10, 2);
+        add_action('edit_user_profile_update', array( $this, 'save_customer_meta_fields', ), 10, 2);
         $this->addAction("admin_enqueue_scripts", 'load_style_script');
     }
 
@@ -70,7 +52,7 @@ class WPSFramework_User_Profile extends WPSFramework_Abstract {
     public function load_style_script() {
         global $pagenow;
         if( $pagenow === 'profile.php' || $pagenow === 'user-edit.php' ) {
-            wpsf_load_fields_styles();
+            wpsf_assets()->render_framework_style_scripts();
         }
     }
 
@@ -78,14 +60,14 @@ class WPSFramework_User_Profile extends WPSFramework_Abstract {
      * @param null $user_id
      */
     public function custom_user_profile_fields($user_id = NULL) {
-        global $wpsf_errors;
         $user_id = ( is_object($user_id) ) ? $user_id->ID : $user_id;
         foreach( $this->options as $option_id => $option ) {
-            $wpsf_errors = get_transient('_wpsf_umeta_' . $option['id']);
-            $wpsf_errors = $wpsf_errors['errors'];
+            $wpsf_errors           = get_transient('_wpsf_umeta_' . $option['id']);
+            $wpsf_errors['errors'] = isset($wpsf_errors['errors']) ? $wpsf_errors['errors'] : array();
+            wpsf_add_errors($wpsf_errors['errors']);
             $values = get_user_meta($user_id, $option['id'], TRUE);
             $values = ( ! is_array($values) ) ? array() : $values;
-            $title = ( isset($option['title']) && ! empty($option['title']) ) ? '<h2>' . $option['title'] . '</h2>' : '';
+            $title  = ( isset($option['title']) && ! empty($option['title']) ) ? '<h2>' . $option['title'] . '</h2>' : '';
             echo $title;
             echo '<div class="wpsf-framework wpsf-user-profile">';
             if( isset($option['style']) && $option['style'] === 'modern' ) {
@@ -108,7 +90,7 @@ class WPSFramework_User_Profile extends WPSFramework_Abstract {
      * @param $user_id
      */
     public function save_customer_meta_fields($user_id) {
-        $save_handler = new WPSFramework_Fields_Save_Sanitize;
+        $save_handler = new WPSFramework_DB_Save_Handler;
         foreach( $this->options as $options ) {
             $posted_data = wpsf_get_var($options['id']);
 

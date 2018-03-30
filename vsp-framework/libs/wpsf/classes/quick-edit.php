@@ -24,16 +24,17 @@ if( ! defined('ABSPATH') ) {
  * Class WPSFramework_Quick_Edit
  */
 class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
-
-    public $options = array();
-    public $post_types = array();
-    public $formatted = array();
-    public $only_IDS = array();
-    private $added_ids = array();
-    private $is_nonce_rendered = FALSE;
+    public    $options           = array();
+    public    $post_types        = array();
+    public    $formatted         = array();
+    public    $only_IDS          = array();
+    protected $type              = 'quickedit';
+    private   $added_ids         = array();
+    private   $is_nonce_rendered = FALSE;
 
     /**
      * WPSFramework_Quick_Edit constructor.
+     *
      * @param array $options
      */
     public function __construct($options = array()) {
@@ -68,7 +69,7 @@ class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
         global $pagenow, $typenow;
 
         if( ( $pagenow === 'edit.php' ) && isset($this->post_types[$typenow]) ) {
-            wpsf_load_fields_styles();
+            wpsf_assets()->render_framework_style_scripts();
             wp_enqueue_script('wpsf-quick-edit');
         }
     }
@@ -115,6 +116,7 @@ class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
     /**
      * @param        $option
      * @param string $db_key
+     *
      * @return bool|string
      */
     private function render_fields($option, $db_key = '') {
@@ -135,15 +137,13 @@ class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
     public function save_quick_edit($post_id, $post) {
         if( wp_verify_nonce(wpsf_get_var('wpsf-quick-edit-nonce'), 'wpsf-quick-edit') ) {
             $post_type = wpsf_get_var('post_type');
-            $errors = array();
-            $validator = new WPSFramework_Fields_Save_Sanitize;
+            $validator = new WPSFramework_DB_Save_Handler;
             if( isset($this->post_types[$post_type]) && isset($this->formatted[$post_type]) ) {
                 foreach( $this->formatted[$post_type] as $data ) {
                     foreach( $data as $section ) {
-                        $transient = array();
-                        $request_key = $section['id'];
+                        $request_key   = $section['id'];
                         $submitted_val = wpsf_get_var($request_key, array());
-                        $db_value = get_post_meta($post_id, $request_key, TRUE);
+                        $db_value      = get_post_meta($post_id, $request_key, TRUE);
 
                         if( ! is_array($db_value) ) {
                             $db_value = array();
@@ -155,7 +155,7 @@ class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
                             unset($request['_nonce']);
                         }
 
-                        $request = $validator->loop_fields(array( 'fields' => $section['fields'] ), $request, $db_value, TRUE);
+                        $request = $validator->loop_fields(array( 'fields' => $section['fields'] ), $request, $db_value);
                         $request = apply_filters('wpsf_save_post', $request, $request_key, $post);
 
                         if( empty ($request) ) {
@@ -163,7 +163,6 @@ class WPSFramework_Quick_Edit extends WPSFramework_Abstract {
                         } else {
                             update_post_meta($post_id, $request_key, $request);
                         }
-
                     }
                 }
             }
