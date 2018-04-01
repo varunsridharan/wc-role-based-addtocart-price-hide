@@ -1,16 +1,16 @@
 <?php
 /*-------------------------------------------------------------------------------------------------
- - This file is part of the WPSF package.                                                         -
- - This package is Open Source Software. For the full copyright and license                       -
- - information, please view the LICENSE file which was distributed with this                      -
- - source code.                                                                                   -
- -                                                                                                -
- - @package    WPSF                                                                               -
- - @author     Varun Sridharan <varunsridharan23@gmail.com>                                       -
+- This file is part of the WPSF package.                                                          -
+- This package is Open Source Software. For the full copyright and license                        -
+- information, please view the LICENSE file which was distributed with this                       -
+- source code.                                                                                    -
+-                                                                                                 -
+- @package    WPSF                                                                                -
+- @author     Varun Sridharan <varunsridharan23@gmail.com>                                        -
  -------------------------------------------------------------------------------------------------*/
 
-if( ! defined('ABSPATH') ) {
-    die ();
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
 } // Cannot access pages directly.
 
 /**
@@ -22,25 +22,27 @@ if( ! defined('ABSPATH') ) {
  *
  */
 class WPSFramework_Option_number extends WPSFramework_Options {
-    /**
-     * WPSFramework_Option_number constructor.
-     *
-     * @param        $field
-     * @param string $value
-     * @param string $unique
-     */
-    public function __construct($field, $value = '', $unique = '') {
-        parent::__construct($field, $value, $unique);
-    }
+	/**
+	 * WPSFramework_Option_number constructor.
+	 *
+	 * @param        $field
+	 * @param string $value
+	 * @param string $unique
+	 */
+	public function __construct( $field, $value = '', $unique = '' ) {
+		parent::__construct( $field, $value, $unique );
+	}
 
-    public function output() {
-        echo $this->element_before();
-        $unit = '<em>' . $this->field ['unit'] . '</em>';
-        echo '<input type="number" name="' . $this->element_name() . '" value="' . $this->element_value() . '"' . $this->element_class() . $this->element_attributes() . '/>' . $unit;
-        echo $this->element_after();
-    }
+	public function output() {
+		echo $this->element_before();
+		$unit = '<em>' . $this->field ['unit'] . '</em>';
+		echo '<input type="number" name="' . $this->element_name() . '" value="' . $this->element_value() . '"' . $this->element_class() . $this->element_attributes() . '/>' . $unit;
+		echo $this->element_after();
+	}
 
-    protected function field_defaults() {
-        return array( 'unit' => '', );
-    }
+	protected function field_defaults() {
+		return array(
+			'unit' => '',
+		);
+	}
 }

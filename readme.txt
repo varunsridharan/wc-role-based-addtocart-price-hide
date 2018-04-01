@@ -7,8 +7,8 @@ Donate link:http://paypal.me/varunsridharan23
 Requires at least: 3.0
 Tested up to: 5
 WC requires at least: 3.0
-WC tested up to: 3.5
-Stable tag: 1.0
+WC tested up to: 3.7
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,12 @@ Hide Product Add To Cart / Price Based on User Role
 
 
 == Screenshots ==
+1. Settings Menu
+2. Settings Page
+3. Settings Page
+4. Frontend View
+5. Frontend View
+6. Frontend View
 
 == Upgrade Notice ==
 
@@ -59,5 +65,9 @@ The manual installation method involves downloading our plugin and uploading it 
 
 
 == Changelog ==
+= 1.1 01/04/2018 =
+* Updated Plugin Framework To 010420180654-Build-1
+* Minor Codecleanup
+
 = 1.0 =
 * Base Version

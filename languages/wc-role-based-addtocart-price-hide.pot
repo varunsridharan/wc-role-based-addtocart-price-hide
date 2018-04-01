@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the WC Role Based AddToCart / Price Hide package.
 msgid ""
 msgstr ""
-"Project-Id-Version: WC Role Based AddToCart / Price Hide 1.0\n"
+"Project-Id-Version: WC Role Based AddToCart / Price Hide 1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wc-role-based-addtocart-price-hide\n"
-"POT-Creation-Date: 2018-02-02 10:31:49+00:00\n"
+"POT-Creation-Date: 2018-04-01 01:29:07+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,93 +12,93 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#: bootstrap.php:36
+#: bootstrap.php:96
 msgid "Save"
 msgstr ""
 
-#: bootstrap.php:109
+#: bootstrap.php:142
 msgid "F.A.Q"
 msgstr ""
 
-#: bootstrap.php:110
+#: bootstrap.php:143
 msgid "View On Github"
 msgstr ""
 
-#: bootstrap.php:111
+#: bootstrap.php:144
 msgid "Report Issue"
 msgstr ""
 
-#: bootstrap.php:112
+#: bootstrap.php:145
 msgid "Donate"
 msgstr ""
 
-#: bootstrap.php:127
+#: bootstrap.php:153
 msgid "Settings"
 msgstr ""
 
-#: bootstrap.php:128
+#: bootstrap.php:154
 msgid "Contact Author"
 msgstr ""
 
-#: includes/class-settings.php:20 includes/class-settings.php:31
+#: includes/class-settings.php:36 includes/class-settings.php:52
 msgid "General"
 msgstr ""
 
-#: includes/class-settings.php:54
+#: includes/class-settings.php:85
 msgid "Enabled User Roles"
 msgstr ""
 
-#: includes/class-settings.php:55
+#: includes/class-settings.php:86
 msgid "Select All User roles for whom you want to hide price / addtocart button"
 msgstr ""
 
-#: includes/class-settings.php:66
+#: includes/class-settings.php:97
 msgid "Select All Produc Types you want to hide price / addtocart button"
 msgstr ""
 
-#: includes/class-settings.php:67
+#: includes/class-settings.php:98
 msgid "Enabled Product Types"
 msgstr ""
 
-#: includes/class-settings.php:95
+#: includes/class-settings.php:128
 msgid "Hide Price ?"
 msgstr ""
 
-#: includes/class-settings.php:96 includes/class-settings.php:105
-#: includes/class-settings.php:117
+#: includes/class-settings.php:129 includes/class-settings.php:138
+#: includes/class-settings.php:150
 msgid "Yes"
 msgstr ""
 
-#: includes/class-settings.php:97 includes/class-settings.php:106
-#: includes/class-settings.php:118
+#: includes/class-settings.php:130 includes/class-settings.php:139
+#: includes/class-settings.php:151
 msgid "No"
 msgstr ""
 
-#: includes/class-settings.php:98
+#: includes/class-settings.php:131
 msgid "Product Price will be hidden if set to Yes"
 msgstr ""
 
-#: includes/class-settings.php:104
+#: includes/class-settings.php:137
 msgid "Hide AddToCart Button ?"
 msgstr ""
 
-#: includes/class-settings.php:107
+#: includes/class-settings.php:140
 msgid "Product Add To Cart Button will be hidden if set to Yes"
 msgstr ""
 
-#: includes/class-settings.php:116
+#: includes/class-settings.php:149
 msgid "Hide Variation ?"
 msgstr ""
 
-#: includes/class-settings.php:119
+#: includes/class-settings.php:152
 msgid "Product Variations will be hidden if set to Yes"
 msgstr ""
 
-#: includes/class-settings.php:126
+#: includes/class-settings.php:159
 msgid "Custom Message"
 msgstr ""
 
-#: includes/class-settings.php:127
+#: includes/class-settings.php:160
 msgid "Used when product price is hidden.. use <code>[currency]</code> to get current store currency"
 msgstr ""
 
